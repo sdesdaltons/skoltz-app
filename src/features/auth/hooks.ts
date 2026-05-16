@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { type Session, type User } from "@supabase/supabase-js"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
@@ -12,69 +12,100 @@ type AuthState = {
   hydrated: boolean
 }
 
-export function useAuth(): AuthState {
-  const supabase = createSupabaseBrowserClient()
-  const [authState, setAuthState] = useState<AuthState>({
-    session: null,
-    user: null,
-    loading: Boolean(supabase),
-    hydrated: !supabase,
-  })
+const supabase = createSupabaseBrowserClient()
+const authSubscribers = new Set<() => void>()
+let authSnapshot: AuthState = {
+  session: null,
+  user: null,
+  loading: Boolean(supabase),
+  hydrated: !supabase,
+}
+let authStoreInitialized = false
+let authRequestVersion = 0
+let authSubscription: { unsubscribe: () => void } | null = null
 
-  useEffect(() => {
-    if (!supabase) {
-      return
-    }
+function emitAuthState(nextAuthState: AuthState) {
+  authSnapshot = nextAuthState
+  authSubscribers.forEach((subscriber) => subscriber())
+}
 
-    let isMounted = true
+function initializeAuthStore() {
+  if (authStoreInitialized || !supabase) {
+    return
+  }
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!isMounted) {
-          return
-        }
+  authStoreInitialized = true
+  const requestVersion = ++authRequestVersion
 
-        const session = data.session ?? null
+  supabase.auth
+    .getSession()
+    .then(({ data }) => {
+      if (!authStoreInitialized || requestVersion !== authRequestVersion) {
+        return
+      }
 
-        setAuthState({
-          session,
-          user: session?.user ?? null,
-          loading: false,
-          hydrated: true,
-        })
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return
-        }
+      const session = data.session ?? null
 
-        setAuthState({
-          session: null,
-          user: null,
-          loading: false,
-          hydrated: true,
-        })
-      })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthState({
-        session: session ?? null,
+      emitAuthState({
+        session,
         user: session?.user ?? null,
         loading: false,
         hydrated: true,
       })
     })
+    .catch(() => {
+      if (!authStoreInitialized || requestVersion !== authRequestVersion) {
+        return
+      }
 
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
+      emitAuthState({
+        session: null,
+        user: null,
+        loading: false,
+        hydrated: true,
+      })
+    })
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    emitAuthState({
+      session: session ?? null,
+      user: session?.user ?? null,
+      loading: false,
+      hydrated: true,
+    })
+  })
+
+  authSubscription = subscription
+}
+
+function subscribeToAuthStore(subscriber: () => void) {
+  authSubscribers.add(subscriber)
+  initializeAuthStore()
+
+  return () => {
+    authSubscribers.delete(subscriber)
+
+    if (authSubscribers.size === 0) {
+      authSubscription?.unsubscribe()
+      authSubscription = null
+      authStoreInitialized = false
+      authRequestVersion += 1
     }
-  }, [supabase])
+  }
+}
 
-  return authState
+function getAuthSnapshot() {
+  return authSnapshot
+}
+
+export function useAuth(): AuthState {
+  return useSyncExternalStore(
+    subscribeToAuthStore,
+    getAuthSnapshot,
+    getAuthSnapshot
+  )
 }
 
 export function useOnlineStatus() {

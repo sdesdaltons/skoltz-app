@@ -1,4 +1,5 @@
 import { type ReactNode } from "react"
+import Image from "next/image"
 
 import { SbBadge, SbButton, SbCard } from "@/components/ui"
 import { cn } from "@/lib/utils"
@@ -9,6 +10,7 @@ export function SbAstrosHighlightCard({
   title,
   description,
   dateTime,
+  logoUrls = [],
   specials = defaultSpecials,
   cta,
   className,
@@ -16,6 +18,7 @@ export function SbAstrosHighlightCard({
   title: string
   description: string
   dateTime: string
+  logoUrls?: string[]
   specials?: string[]
   cta?: ReactNode
   className?: string
@@ -28,6 +31,24 @@ export function SbAstrosHighlightCard({
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
+        {logoUrls.slice(0, 2).length ? (
+          <div className="flex items-center -space-x-1">
+            {logoUrls.slice(0, 2).map((logoUrl) => (
+              <span
+                key={logoUrl}
+                className="relative size-10 overflow-hidden rounded-full border border-primary/30 bg-surface-1"
+              >
+                <Image
+                  src={logoUrl}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-contain p-1"
+                />
+              </span>
+            ))}
+          </div>
+        ) : null}
         <SbBadge tone="blue">Astros</SbBadge>
         <SbBadge tone="neutral">Featured</SbBadge>
       </div>

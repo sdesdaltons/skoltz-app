@@ -30,10 +30,23 @@ type EspnEvent = {
     venue?: {
       fullName?: string
     }
+    competitors?: Array<{
+      team?: {
+        logo?: string
+      }
+    }>
     notes?: Array<{
       headline?: string
     }>
   }>
+}
+
+function getEspnLogoUrls(event: EspnEvent) {
+  return (
+    event.competitions?.[0]?.competitors
+      ?.map((competitor) => competitor.team?.logo)
+      .filter((logo): logo is string => Boolean(logo)) ?? []
+  )
 }
 
 const leagueConfigs: EspnLeagueConfig[] = [
@@ -99,6 +112,7 @@ function mapEspnEventToRawEvent(
     endTime: endTime.toISOString(),
     categories: [config.category],
     location: competition?.venue?.fullName ?? `${config.label} game`,
+    logoUrls: getEspnLogoUrls(event),
   }
 }
 

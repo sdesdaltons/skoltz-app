@@ -21,11 +21,13 @@ type MlbGame = {
   teams: {
     away: {
       team: {
+        id: number
         name: string
       }
     }
     home: {
       team: {
+        id: number
         name: string
       }
     }
@@ -33,6 +35,17 @@ type MlbGame = {
   venue?: {
     name?: string
   }
+}
+
+function getMlbTeamLogoUrl(teamId: number) {
+  return `https://www.mlbstatic.com/team-logos/${teamId}.svg`
+}
+
+function getMlbGameLogoUrls(game: MlbGame) {
+  return [
+    getMlbTeamLogoUrl(game.teams.away.team.id),
+    getMlbTeamLogoUrl(game.teams.home.team.id),
+  ]
 }
 
 function formatSourceDate(date: Date) {
@@ -64,6 +77,7 @@ function mapMlbGameToRawEvent(game: MlbGame): RawEvent {
     endTime: endTime.toISOString(),
     categories: ["astros"],
     location: game.venue?.name ?? "Astros game",
+    logoUrls: getMlbGameLogoUrls(game),
   }
 }
 
@@ -89,6 +103,7 @@ function mapMlbPostseasonGameToRawEvent(game: MlbGame): RawEvent {
     endTime: endTime.toISOString(),
     categories: ["mlb"],
     location: game.venue?.name ?? "MLB postseason game",
+    logoUrls: getMlbGameLogoUrls(game),
   }
 }
 

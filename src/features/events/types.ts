@@ -21,6 +21,7 @@ export interface RawEvent {
   endTime: string
   categories: EventCategory[]
   location: string
+  logoUrls?: string[]
 }
 
 export interface UIEvent {
@@ -35,6 +36,7 @@ export interface UIEvent {
   categoryInfo: EventCategoryInfo[]
   primaryCategory: EventCategory
   location: string
+  logoUrls: string[]
   isAstros: boolean
   isHighlighted: boolean
 }

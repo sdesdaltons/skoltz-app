@@ -61,6 +61,7 @@ export function adaptRawEvent(rawEvent: RawEvent): UIEvent {
     categoryInfo: normalizeCategories(rawEvent.categories),
     primaryCategory: rawEvent.categories[0],
     location: rawEvent.location,
+    logoUrls: rawEvent.logoUrls ?? [],
     isAstros,
     isHighlighted: isAstros,
   }

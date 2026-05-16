@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { SbCalendarGrid, type SbCalendarEvent } from "@/components/calendar";
@@ -445,6 +446,42 @@ function getSuperBowlCoverageMonth(currentDate: Date) {
   return new Date(coverageYear, 1, 1);
 }
 
+function EventLogoStrip({
+  logoUrls,
+  size = "sm",
+}: {
+  logoUrls: string[];
+  size?: "sm" | "md";
+}) {
+  const visibleLogos = logoUrls.slice(0, 2);
+
+  if (!visibleLogos.length) {
+    return null;
+  }
+
+  const sizeClass = size === "md" ? "size-10" : "size-7";
+  const imageSize = size === "md" ? "40px" : "28px";
+
+  return (
+    <div className="flex items-center -space-x-1">
+      {visibleLogos.map((logoUrl) => (
+        <span
+          key={logoUrl}
+          className={`${sizeClass} relative overflow-hidden rounded-full border border-border bg-surface-1`}
+        >
+          <Image
+            src={logoUrl}
+            alt=""
+            fill
+            sizes={imageSize}
+            className="object-contain p-1"
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function CompactEventCard({
   event,
   currentTime,
@@ -468,6 +505,7 @@ function CompactEventCard({
     >
       <div className="space-y-1.5">
         <div className="flex flex-wrap gap-1.5">
+          <EventLogoStrip logoUrls={event.logoUrls} />
           {event.categoryInfo.map((category) => (
             <SbBadge key={category.value} tone={eventCategoryTone(category.value)}>
               {category.label}
@@ -529,6 +567,7 @@ function FocalEventCard({
         title={event.title}
         description={event.description}
         dateTime={`${event.displayDate} - ${event.displayTime}`}
+        logoUrls={event.logoUrls}
         cta={
           <SbButton asChild className="w-full sm:w-auto" href="#calendar">
             View on calendar
@@ -541,6 +580,7 @@ function FocalEventCard({
   return (
     <SbCard className="space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)]">
       <div className="flex flex-wrap gap-1.5">
+        <EventLogoStrip logoUrls={event.logoUrls} size="md" />
         {event.categoryInfo.map((category) => (
           <SbBadge key={category.value} tone={eventCategoryTone(category.value)}>
             {category.label}
@@ -577,6 +617,7 @@ function toCalendarEvent(event: UIEvent): SbCalendarEvent {
     title: event.title,
     kind: event.primaryCategory,
     time: event.displayTime,
+    logoUrls: event.logoUrls,
   };
 }
 
@@ -898,6 +939,7 @@ export default function Home() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
+                              <EventLogoStrip logoUrls={event.logoUrls} />
                               <SbBadge
                                 tone={eventCategoryTone(event.primaryCategory)}
                               >

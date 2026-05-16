@@ -6,6 +6,7 @@ export type SbCalendarEvent = {
   title: string
   kind: SbEventKind
   time?: string
+  logoUrls?: string[]
 }
 
 export function SbCalendarDay({

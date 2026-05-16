@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import { SbBadge, SbButton, SbCard } from "@/components/ui"
 import { cn } from "@/lib/utils"
 
@@ -56,6 +58,24 @@ export function SbDayDetail({
                 className="flex min-h-12 items-center gap-3 rounded-md border border-border bg-surface-1 px-3 py-2"
               >
                 <SbEventIndicator kind={event.kind} />
+                {event.logoUrls?.length ? (
+                  <div className="flex shrink-0 items-center -space-x-1">
+                    {event.logoUrls.slice(0, 2).map((logoUrl) => (
+                      <span
+                        key={logoUrl}
+                        className="relative size-7 overflow-hidden rounded-full border border-border bg-surface-2"
+                      >
+                        <Image
+                          src={logoUrl}
+                          alt=""
+                          fill
+                          sizes="28px"
+                          className="object-contain p-1"
+                        />
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">
                     {event.title}

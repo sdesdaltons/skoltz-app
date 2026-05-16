@@ -11,6 +11,41 @@ type BeforeInstallPromptEvent = Event & {
 }
 
 const installDismissedKey = "skoltz-pwa-install-dismissed"
+const installDismissDurationMs = 24 * 60 * 60 * 1000
+const isDevelopment = process.env.NODE_ENV === "development"
+
+function isInstallDismissed() {
+  const dismissedUntil = localStorage.getItem(installDismissedKey)
+
+  if (!dismissedUntil) {
+    return false
+  }
+
+  if (dismissedUntil === "true") {
+    localStorage.removeItem(installDismissedKey)
+    return false
+  }
+
+  const dismissedUntilTime = Number(dismissedUntil)
+
+  if (!Number.isFinite(dismissedUntilTime) || dismissedUntilTime <= Date.now()) {
+    localStorage.removeItem(installDismissedKey)
+    return false
+  }
+
+  return true
+}
+
+function dismissInstallPrompt() {
+  localStorage.setItem(
+    installDismissedKey,
+    String(Date.now() + installDismissDurationMs)
+  )
+}
+
+function isStandaloneDisplay() {
+  return window.matchMedia("(display-mode: standalone)").matches
+}
 
 export function PwaInstallBanner() {
   const [installPrompt, setInstallPrompt] =
@@ -20,19 +55,28 @@ export function PwaInstallBanner() {
   useEffect(() => {
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault()
+      const promptEvent = event as BeforeInstallPromptEvent
 
-      if (localStorage.getItem(installDismissedKey) === "true") {
+      if (isDevelopment) {
+        console.debug("[Skoltz PWA] beforeinstallprompt fired")
+      }
+
+      if (isStandaloneDisplay() || isInstallDismissed()) {
         return
       }
 
-      setInstallPrompt(event as BeforeInstallPromptEvent)
+      setInstallPrompt(promptEvent)
       setIsDismissed(false)
     }
 
     function handleAppInstalled() {
-      localStorage.setItem(installDismissedKey, "true")
+      dismissInstallPrompt()
       setInstallPrompt(null)
       setIsDismissed(true)
+
+      if (isDevelopment) {
+        console.debug("[Skoltz PWA] appinstalled fired")
+      }
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
@@ -56,15 +100,19 @@ export function PwaInstallBanner() {
     await installPrompt.prompt()
     const choice = await installPrompt.userChoice
 
+    if (isDevelopment) {
+      console.debug("[Skoltz PWA] install prompt outcome", choice.outcome)
+    }
+
     if (choice.outcome === "accepted" || choice.outcome === "dismissed") {
-      localStorage.setItem(installDismissedKey, "true")
+      dismissInstallPrompt()
       setInstallPrompt(null)
       setIsDismissed(true)
     }
   }
 
   function handleDismiss() {
-    localStorage.setItem(installDismissedKey, "true")
+    dismissInstallPrompt()
     setInstallPrompt(null)
     setIsDismissed(true)
   }

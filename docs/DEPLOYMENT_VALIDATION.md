@@ -52,7 +52,7 @@ Run these checks in Supabase SQL Editor or through controlled client requests.
 - `checkins` unauthenticated `INSERT` fails.
 - `checkins` authenticated `INSERT` succeeds only when `user_id = auth.uid()`.
 - `checkins` wrong-user `INSERT` fails.
-- duplicate same-day check-in for the same user fails through `checkins_user_day_unique_idx`.
+- repeat check-in within 12 hours for the same user fails through `checkins_12_hour_cooldown`.
 - duplicate failure maps to the frontend `DUPLICATE` message.
 
 ### Event Constraints

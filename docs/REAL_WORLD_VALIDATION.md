@@ -106,7 +106,7 @@ Pending after schema initialization:
 
 - unauthenticated check-in insert fails due to RLS, not missing table.
 - wrong-user insert attempt fails.
-- duplicate same-day insert fails due to unique index.
+- repeat check-in within 12 hours fails due to the `checkins_12_hour_cooldown` trigger.
 - invalid category insert fails due to category check constraint.
 
 ## Blockers Found

@@ -16,6 +16,11 @@ const skoltzLocation: CheckInPosition = {
   longitude: -95.3698,
 }
 const allowedRadiusMeters = 150
+const checkInCooldownMs = 12 * 60 * 60 * 1000
+
+type LatestCheckInRow = {
+  timestamp: string
+}
 
 function getCurrentPosition(): Promise<GeolocationPosition> {
   if (!window.navigator.onLine) {
@@ -89,18 +94,59 @@ function distanceInMeters(first: CheckInPosition, second: CheckInPosition) {
 
 function mapSupabaseError(error: unknown): CheckInError {
   const maybeError = error as { code?: string; message?: string }
+  const message = maybeError.message?.toLowerCase()
 
   if (
     maybeError.code === "23505" ||
-    maybeError.message?.toLowerCase().includes("duplicate")
+    message?.includes("duplicate") ||
+    message?.includes("12 hours")
   ) {
-    return new CheckInError("DUPLICATE", "You have already checked in today.")
+    return new CheckInError(
+      "DUPLICATE",
+      "You can only check in once every 12 hours."
+    )
   }
 
   return new CheckInError(
     "SUPABASE_ERROR",
     maybeError.message ?? "Check-in could not be saved."
   )
+}
+
+async function assertCheckInCooldown(userId: string) {
+  const supabase = createSupabaseBrowserClient()
+
+  if (!supabase) {
+    throw new CheckInError(
+      "NOT_CONFIGURED",
+      "Supabase is not configured for check-ins."
+    )
+  }
+
+  const { data, error } = await supabase
+    .from("checkins")
+    .select("timestamp")
+    .eq("user_id", userId)
+    .order("timestamp", { ascending: false })
+    .limit(1)
+    .maybeSingle<LatestCheckInRow>()
+
+  if (error) {
+    throw mapSupabaseError(error)
+  }
+
+  if (!data?.timestamp) {
+    return
+  }
+
+  const lastCheckInTime = new Date(data.timestamp).getTime()
+
+  if (Date.now() - lastCheckInTime < checkInCooldownMs) {
+    throw new CheckInError(
+      "DUPLICATE",
+      "You can only check in once every 12 hours."
+    )
+  }
 }
 
 export function useCreateCheckIn() {
@@ -135,6 +181,8 @@ export function useCreateCheckIn() {
           "Supabase is not configured for check-ins."
         )
       }
+
+      await assertCheckInCooldown(user.id)
 
       let position: GeolocationPosition
 

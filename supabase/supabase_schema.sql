@@ -55,8 +55,39 @@ create table if not exists public.checkins (
 create index if not exists events_start_time_idx on public.events (start_time);
 create index if not exists sports_games_start_time_idx on public.sports_games (start_time);
 create index if not exists checkins_user_id_idx on public.checkins (user_id);
-CREATE UNIQUE INDEX checkins_user_date_unique
-  ON public.checkins (user_id, ((timestamp AT TIME ZONE 'UTC')::date));
+drop index if exists checkins_user_date_unique;
+create index if not exists checkins_user_timestamp_idx
+  on public.checkins (user_id, timestamp desc);
+
+create or replace function public.enforce_checkin_12_hour_cooldown()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  new.timestamp = now();
+
+  if exists (
+    select 1
+    from public.checkins
+    where user_id = new.user_id
+      and timestamp > new.timestamp - interval '12 hours'
+      and timestamp <= new.timestamp
+  ) then
+    raise exception 'Check-ins are limited to once every 12 hours.'
+      using errcode = '23505';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists checkins_12_hour_cooldown on public.checkins;
+create trigger checkins_12_hour_cooldown
+  before insert on public.checkins
+  for each row
+  execute function public.enforce_checkin_12_hour_cooldown();
 
 alter table public.rewards enable row level security;
 alter table public.events enable row level security;

@@ -79,8 +79,8 @@ export function SbBottomNav({
   )
 
   useEffect(() => {
-    function resolveActiveItem(): NavItem["label"] {
-      if (window.location.hash === "#calendar" || pathname === "/calendar") {
+    function resolveActiveItem(calendarInView = false): NavItem["label"] {
+      if (pathname === "/calendar") {
         return "Calendar"
       }
 
@@ -93,6 +93,14 @@ export function SbBottomNav({
       }
 
       if (pathname === "/") {
+        if (window.scrollY < 120 && !calendarInView) {
+          return "Home"
+        }
+
+        if (window.location.hash === "#calendar" || calendarInView) {
+          return "Calendar"
+        }
+
         return "Home"
       }
 
@@ -106,8 +114,26 @@ export function SbBottomNav({
     updateActiveItem()
     window.addEventListener("hashchange", updateActiveItem)
 
+    const calendarSection = document.getElementById("calendar")
+    const calendarObserver =
+      pathname === "/" && calendarSection
+        ? new IntersectionObserver(
+            ([entry]) => {
+              setEffectiveActive(resolveActiveItem(entry.isIntersecting))
+            },
+            {
+              root: null,
+              rootMargin: "-25% 0px -45% 0px",
+              threshold: 0,
+            }
+          )
+        : null
+
+    calendarObserver?.observe(calendarSection as Element)
+
     return () => {
       window.removeEventListener("hashchange", updateActiveItem)
+      calendarObserver?.disconnect()
     }
   }, [active, pathname])
 

@@ -20,8 +20,6 @@ import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
 
-const calendarMonth = new Date(2026, 4, 1);
-
 const promoCards = [
   {
     image: tuesdaySpecialPromo,
@@ -46,6 +44,72 @@ const promoCards = [
   },
 ];
 
+const companionCategoryTone: Record<
+  UIEvent["primaryCategory"],
+  "blue" | "red" | "success" | "warning"
+> = {
+  astros: "blue",
+  rockets: "red",
+  texans: "blue",
+  karaoke: "warning",
+  pool: "success",
+};
+
+const companionPriority: Record<UIEvent["primaryCategory"], number> = {
+  karaoke: 0,
+  pool: 1,
+  astros: 2,
+  rockets: 3,
+  texans: 4,
+};
+
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
+  return (
+    dateKey(event.startTime) === targetDateKey ||
+    dateKey(event.endTime) === targetDateKey
+  );
+}
+
+function selectFeaturedAstrosEvent(events: UIEvent[], today: Date) {
+  const todayKey = dateKey(today);
+  const astrosEvents = events
+    .filter((event) => event.isAstros)
+    .sort(
+      (firstEvent, secondEvent) =>
+        firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
+    );
+  const todayAstrosEvent = astrosEvents.find((event) =>
+    eventOccursOnDate(event, todayKey)
+  );
+
+  return (
+    todayAstrosEvent ??
+    astrosEvents.find(
+      (event) => event.startTime.getTime() >= today.getTime()
+    ) ??
+    astrosEvents[0]
+  );
+}
+
+const sameDayLabelFormatter = new Intl.DateTimeFormat("en-US", {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
+const calendarMonthLabelFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+});
+
 function toCalendarEvent(event: UIEvent): SbCalendarEvent {
   return {
     id: event.id,
@@ -67,14 +131,36 @@ function toCalendarEventsByDate(
 }
 
 export default function Home() {
+  const today = new Date();
+  const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const calendarMonthLabel = calendarMonthLabelFormatter.format(calendarMonth);
   const upcomingQuery = useUpcomingEvents();
   const calendarQuery = useCalendarEvents(calendarMonth);
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
-  const featuredAstrosEvent = events.find((event) => event.isAstros);
+  const featuredAstrosEvent = selectFeaturedAstrosEvent(events, today);
+  const todayKey = dateKey(today);
+  const todayLabel = sameDayLabelFormatter.format(today);
+  const companionEvents = featuredAstrosEvent
+    ? events
+        .filter(
+          (event) =>
+            event.id !== featuredAstrosEvent.id &&
+            eventOccursOnDate(event, todayKey)
+        )
+        .sort(
+          (firstEvent, secondEvent) =>
+            companionPriority[firstEvent.primaryCategory] -
+            companionPriority[secondEvent.primaryCategory]
+        )
+    : [];
+  const companionEventIds = new Set(companionEvents.map((event) => event.id));
   const upcomingEvents = featuredAstrosEvent
-    ? events.filter((event) => event.id !== featuredAstrosEvent.id)
+    ? events.filter(
+        (event) =>
+          event.id !== featuredAstrosEvent.id && !companionEventIds.has(event.id)
+      )
     : events;
   const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
@@ -155,16 +241,65 @@ export default function Home() {
             ) : null}
 
             {!isLoading && !isError && featuredAstrosEvent ? (
-              <SbAstrosHighlightCard
-                title={featuredAstrosEvent.title}
-                description={featuredAstrosEvent.description}
-                dateTime={`${featuredAstrosEvent.displayDate} - ${featuredAstrosEvent.displayTime}`}
+              <div className="space-y-4">
+                <SbAstrosHighlightCard
+                  title={featuredAstrosEvent.title}
+                  description={featuredAstrosEvent.description}
+                  dateTime={`${featuredAstrosEvent.displayDate} - ${featuredAstrosEvent.displayTime}`}
                   cta={
                     <SbButton asChild className="w-full sm:w-auto" href="#calendar">
                       View on calendar
                     </SbButton>
                   }
-              />
+                />
+
+                {companionEvents.length > 0 ? (
+                  <SbCard className="space-y-3 border-primary/30 bg-surface-2">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-primary">
+                          Also tonight
+                        </p>
+                        <h2 className="text-xl font-semibold">
+                          More happening with the game
+                        </h2>
+                      </div>
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        {todayLabel}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {companionEvents.map((event) => (
+                        <a
+                          key={event.id}
+                          href="#calendar"
+                          className="rounded-md border border-border bg-surface-1 p-3 transition hover:border-primary/50 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 space-y-1">
+                              <SbBadge
+                                tone={companionCategoryTone[event.primaryCategory]}
+                              >
+                                {event.primaryCategory}
+                              </SbBadge>
+                              <h3 className="truncate text-base font-semibold text-foreground">
+                                {event.title}
+                              </h3>
+                              <p className="text-sm font-semibold text-muted-foreground">
+                                {event.displayTime}
+                              </p>
+                            </div>
+                            <span className="shrink-0 text-sm font-semibold text-primary">
+                              View
+                            </span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </SbCard>
+                ) : null}
+              </div>
             ) : null}
           </SbContainer>
         </SbSection>
@@ -240,7 +375,7 @@ export default function Home() {
               subtitle="Browse upcoming nights at Skoltz by date."
               action={
                 <p className="text-sm font-semibold text-muted-foreground">
-                  May 2026
+                  {calendarMonthLabel}
                 </p>
               }
             />
@@ -261,7 +396,7 @@ export default function Home() {
               ) : (
                 <SbCalendarGrid
                   month={calendarMonth}
-                  today={new Date(2026, 4, 15)}
+                  today={today}
                   eventsByDate={calendarEvents}
                 />
               )}

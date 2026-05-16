@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 
 import { OfflineBanner } from "@/components/feedback"
 import { SbContainer, SbSection } from "@/components/layout"
-import { SbBottomNav } from "@/components/navigation"
 import { SbBadge, SbButton, SbCard } from "@/components/ui"
 import {
   signInWithEmail,
@@ -59,7 +58,7 @@ export default function LoginPage() {
     return (
       <>
         <OfflineBanner />
-        <main className="flex-1 pb-24 md:pb-0">
+        <main className="flex-1">
           <SbSection className="py-8 sm:py-12">
             <SbContainer className="max-w-xl">
               <SbCard className="space-y-3 bg-surface-2">
@@ -70,7 +69,6 @@ export default function LoginPage() {
             </SbContainer>
           </SbSection>
         </main>
-        <SbBottomNav active="Account" />
       </>
     )
   }
@@ -78,7 +76,7 @@ export default function LoginPage() {
   return (
     <>
       <OfflineBanner />
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="flex-1">
         <SbSection className="py-8 sm:py-12">
           <SbContainer className="max-w-xl space-y-6">
             <div className="space-y-3">
@@ -90,6 +88,14 @@ export default function LoginPage() {
                 Guests can still browse events. Sign in when you need protected
                 account and rewards areas.
               </p>
+              <div className="flex flex-wrap gap-3">
+                <SbButton asChild href="/" variant="secondary" size="sm">
+                  Back home
+                </SbButton>
+                <SbButton asChild href="/#calendar" variant="ghost" size="sm">
+                  View calendar
+                </SbButton>
+              </div>
             </div>
 
             <SbCard className="space-y-4 bg-surface-2">
@@ -151,7 +157,6 @@ export default function LoginPage() {
           </SbContainer>
         </SbSection>
       </main>
-      <SbBottomNav active="Account" />
     </>
   )
 }

@@ -36,6 +36,7 @@ type PromoCard = {
   alt: string;
   title: string;
   subtitle: string;
+  details: string;
   ctaText: string;
   schedule:
     | {
@@ -55,6 +56,7 @@ const promoCards = [
     alt: "Skoltz crawfish special graphic",
     title: "Crawfish night",
     subtitle: "Seasonal food special with cold drinks and loud vibes.",
+    details: "Crawfish special with cold drinks.",
     ctaText: "Sat May 16",
     schedule: { type: "date", month: 4, day: 16 },
   },
@@ -62,7 +64,8 @@ const promoCards = [
     image: tuesdaySpecialPromo,
     alt: "Skoltz Tuesday specials graphic",
     title: "Tuesday specials",
-    subtitle: "Tacos, Ziegenbock pints, wells, and featured shots.",
+    subtitle: "$2 tacos, $2 Ziegen pints, and $2.30 wells.",
+    details: "$2 Tacos & Ziegen Pints and $2.30 wells.",
     ctaText: "Tuesdays",
     schedule: { type: "weekly", day: 2 },
   },
@@ -71,6 +74,7 @@ const promoCards = [
     alt: "Skoltz dart tournament graphic",
     title: "Dart tournament",
     subtitle: "Blind draw partners, added prize money, and signups on site.",
+    details: "Blind draw partners, added prize money, and signups on site.",
     ctaText: "Mon May 25",
     schedule: { type: "date", month: 4, day: 25 },
   },
@@ -265,7 +269,7 @@ function getPromoCalendarEventsForMonth(
             title: promo.title,
             kind: "special",
             time: promo.ctaText,
-            description: promo.subtitle,
+            description: promo.details,
           },
         });
       }
@@ -287,7 +291,7 @@ function getPromoCalendarEventsForMonth(
           title: promo.title,
           kind: "special",
           time: promo.ctaText,
-          description: promo.subtitle,
+          description: promo.details,
         },
       });
     }

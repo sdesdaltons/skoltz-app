@@ -53,6 +53,7 @@ const promoCards = [
 ];
 
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
+const tonightWindowEndHour = 4;
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -134,13 +135,6 @@ function isStartingSoonEvent(event: UIEvent, currentTime: Date) {
   return timeUntilStart >= 0 && timeUntilStart <= startingSoonWindowMs;
 }
 
-function isStartingSoonTonightEvent(event: UIEvent, currentTime: Date) {
-  return (
-    isStartingSoonEvent(event, currentTime) &&
-    dateKey(event.startTime) === dateKey(currentTime)
-  );
-}
-
 function isFutureTonightEvent(event: UIEvent, currentTime: Date) {
   return (
     isFutureEvent(event, currentTime) &&
@@ -150,6 +144,19 @@ function isFutureTonightEvent(event: UIEvent, currentTime: Date) {
 
 function isCurrentOrFutureEvent(event: UIEvent, currentTime: Date) {
   return event.endTime.getTime() > currentTime.getTime();
+}
+
+function isSameNightEvent(event: UIEvent, currentTime: Date) {
+  const currentDateKey = dateKey(currentTime);
+  const tomorrow = new Date(currentTime);
+
+  tomorrow.setDate(currentTime.getDate() + 1);
+
+  const isLateNightCarryover =
+    event.startTime.getHours() < tonightWindowEndHour &&
+    dateKey(event.startTime) === dateKey(tomorrow);
+
+  return eventOccursOnDate(event, currentDateKey) || isLateNightCarryover;
 }
 
 function selectFridayKaraokeEvent(events: UIEvent[], currentTime: Date) {
@@ -162,7 +169,7 @@ function selectFridayKaraokeEvent(events: UIEvent[], currentTime: Date) {
       (event) =>
         isKaraokeEvent(event) &&
         isCurrentOrFutureEvent(event, currentTime) &&
-        eventOccursOnDate(event, dateKey(currentTime))
+        isSameNightEvent(event, currentTime)
     )
   )[0];
 }
@@ -193,24 +200,35 @@ function sortEventsByFuturePriority(events: UIEvent[]) {
 }
 
 function selectFocalEvent(events: UIEvent[], currentTime: Date) {
-  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const startingSoonEvents = sortEventsByLifecyclePriority(
-    events.filter((event) => isStartingSoonTonightEvent(event, currentTime))
+    events.filter(
+      (event) =>
+        isStartingSoonEvent(event, currentTime) &&
+        isSameNightEvent(event, currentTime)
+    )
   );
   const ongoingEvents = sortEventsByLifecyclePriority(
-    events.filter((event) => isOngoingEvent(event, currentTime))
+    events.filter(
+      (event) =>
+        isOngoingEvent(event, currentTime) && isSameNightEvent(event, currentTime)
+    )
   );
+  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const futureTonightEvents = sortEventsByLifecyclePriority(
-    events.filter((event) => isFutureTonightEvent(event, currentTime))
+    events.filter(
+      (event) =>
+        isFutureTonightEvent(event, currentTime) &&
+        isSameNightEvent(event, currentTime)
+    )
   );
   const futureEvents = sortEventsByFuturePriority(
     events.filter((event) => isFutureEvent(event, currentTime))
   );
 
   return (
-    fridayKaraokeEvent ??
-    startingSoonEvents[0] ??
     ongoingEvents[0] ??
+    startingSoonEvents[0] ??
+    fridayKaraokeEvent ??
     futureTonightEvents[0] ??
     futureEvents[0]
   );
@@ -241,7 +259,7 @@ function CompactEventCard({
   const isFridayKaraoke =
     isFriday(currentTime) &&
     isKaraokeEvent(event) &&
-    eventOccursOnDate(event, dateKey(currentTime));
+    isSameNightEvent(event, currentTime);
 
   return (
     <a
@@ -390,7 +408,7 @@ function FocalEventCard({
   const isFridayKaraoke =
     isFriday(currentTime) &&
     isKaraokeEvent(event) &&
-    eventOccursOnDate(event, dateKey(currentTime));
+    isSameNightEvent(event, currentTime);
 
   if (event.isAstros) {
     return (
@@ -492,7 +510,6 @@ export default function Home() {
         isOngoingEvent(event, today) && event.id !== focalEvent?.id
     )
   );
-  const todayKey = dateKey(today);
   const todayLabel = sameDayLabelFormatter.format(today);
   const companionEvents = focalEvent
     ? events
@@ -500,7 +517,7 @@ export default function Home() {
           (event) =>
             event.id !== focalEvent.id &&
             isFutureEvent(event, today) &&
-            eventOccursOnDate(event, todayKey)
+            isSameNightEvent(event, today)
         )
         .sort(
           (firstEvent, secondEvent) =>

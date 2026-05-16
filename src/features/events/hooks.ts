@@ -94,12 +94,20 @@ function isInMonth(event: UIEvent, month: Date) {
   )
 }
 
+function startOfToday() {
+  const today = new Date()
+
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate())
+}
+
 export function useUpcomingEvents() {
   return useQuery({
     queryKey: queryKeys.events.upcoming,
     queryFn: async () => {
       const rawEvents = await readEvents()
-      const events = adaptRawEvents(rawEvents.filter(isPublicEvent))
+      const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter(
+        (event) => event.endTime.getTime() >= startOfToday().getTime()
+      )
 
       return events.sort(
         (firstEvent, secondEvent) =>

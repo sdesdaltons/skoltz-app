@@ -1,11 +1,16 @@
 "use client"
 
 import { SbCalendarGrid, type SbCalendarEvent } from "@/components/calendar";
+import { SbLogo } from "@/components/branding";
 import {
   SbAstrosHighlightCard,
   SbEventCardSkeleton,
 } from "@/components/events";
-import { OfflineBanner, SbEmptyState } from "@/components/feedback";
+import {
+  OfflineBanner,
+  PwaInstallBanner,
+  SbEmptyState,
+} from "@/components/feedback";
 import { SbContainer, SbSection, SbSectionHeader } from "@/components/layout";
 import { SbBottomNav } from "@/components/navigation";
 import { SbPromoCard } from "@/components/promos";
@@ -358,7 +363,10 @@ export default function Home() {
           <SbContainer className="space-y-4">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
-                <SbBadge tone="blue">Skoltz</SbBadge>
+                <div className="inline-flex items-center gap-3 rounded-md border border-border/70 bg-surface-1 px-3 py-2">
+                  <SbLogo className="h-8 w-auto sm:h-9" />
+                  <SbBadge tone="blue">Tonight</SbBadge>
+                </div>
                 <h1 className="text-3xl font-semibold tracking-normal text-foreground sm:text-5xl">
                   Tonight at Skoltz
                 </h1>
@@ -382,6 +390,8 @@ export default function Home() {
                 Sign in
               </SbButton>
             </SbCard>
+
+            <PwaInstallBanner />
 
             {isLoading ? (
               <SbEventCardSkeleton className="min-h-72 border-primary/40 bg-primary/10 shadow-[var(--sb-glow-blue)]" />

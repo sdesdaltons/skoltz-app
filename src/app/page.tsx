@@ -1314,8 +1314,7 @@ export default function Home() {
         <SbSection className="py-5">
           <SbContainer className="space-y-3">
             <SbSectionHeader
-              title="Featured specials"
-              subtitle="Food, drinks, and venue promos happening around the bar."
+              title="Featured Events"
             />
 
             <div className="flex gap-4 overflow-x-auto pb-2">

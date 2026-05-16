@@ -112,6 +112,10 @@ function isFriday(date: Date) {
   return date.getDay() === 5;
 }
 
+function isFridayNightWindow(date: Date) {
+  return isFriday(date) || (date.getDay() === 6 && date.getHours() < 4);
+}
+
 function isKaraokeEvent(event: UIEvent) {
   return event.categories.includes("karaoke");
 }
@@ -160,7 +164,7 @@ function isSameNightEvent(event: UIEvent, currentTime: Date) {
 }
 
 function selectFridayKaraokeEvent(events: UIEvent[], currentTime: Date) {
-  if (!isFriday(currentTime)) {
+  if (!isFridayNightWindow(currentTime)) {
     return undefined;
   }
 
@@ -257,7 +261,7 @@ function CompactEventCard({
   const statusLabel = getFocalStatusLabel(event, currentTime);
   const showStatus = statusLabel !== "Featured";
   const isFridayKaraoke =
-    isFriday(currentTime) &&
+    isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
 
@@ -406,7 +410,7 @@ function FocalEventCard({
   currentTime: Date;
 }) {
   const isFridayKaraoke =
-    isFriday(currentTime) &&
+    isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
 
@@ -476,6 +480,59 @@ function toCalendarEventsByDate(
       events.map(toCalendarEvent),
     ])
   ) as Record<string, SbCalendarEvent[]>;
+}
+
+const eventStartTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function getHeroDescription({
+  focalEvent,
+  fridayKaraokeEvent,
+  currentTime,
+}: {
+  focalEvent?: UIEvent;
+  fridayKaraokeEvent?: UIEvent;
+  currentTime: Date;
+}) {
+  if (fridayKaraokeEvent) {
+    const karaokeStart = eventStartTimeFormatter.format(
+      fridayKaraokeEvent.startTime
+    );
+
+    if (isOngoingEvent(fridayKaraokeEvent, currentTime)) {
+      return "Friday Karaoke is happening now at Skoltz.";
+    }
+
+    if (isStartingSoonEvent(fridayKaraokeEvent, currentTime)) {
+      return `Friday Karaoke starts at ${karaokeStart}. Drinks, songs, and specials are on tonight.`;
+    }
+
+    return `Friday Karaoke starts at ${karaokeStart}. Games and specials are still on around the bar.`;
+  }
+
+  if (focalEvent && isSameNightEvent(focalEvent, currentTime)) {
+    if (focalEvent.isAstros) {
+      if (isOngoingEvent(focalEvent, currentTime)) {
+        return "The Astros game is on now with cold drinks and tonight's specials at Skoltz.";
+      }
+
+      return "Catch the Astros game, cold drinks, and tonight's specials at Skoltz.";
+    }
+
+    if (isOngoingEvent(focalEvent, currentTime)) {
+      return `${focalEvent.title} is happening now at Skoltz.`;
+    }
+
+    if (isFutureEvent(focalEvent, currentTime)) {
+      const eventStart = eventStartTimeFormatter.format(focalEvent.startTime);
+
+      return `${focalEvent.title} starts at ${eventStart} tonight at Skoltz.`;
+    }
+  }
+
+  return "Catch tonight's games, events, and specials before you get to the bar.";
 }
 
 export default function Home() {
@@ -555,9 +612,11 @@ export default function Home() {
     : isSignedIn
       ? "Check in when you arrive and keep an eye on available rewards."
       : "Rewards and venue check-ins are available after login.";
-  const heroDescription = fridayKaraokeEvent
-    ? `${fridayKaraokeEvent.title} runs ${fridayKaraokeEvent.displayTime}. Games and specials are still on around the bar.`
-    : "Catch tonight's games, events, and specials before you get to the bar.";
+  const heroDescription = getHeroDescription({
+    focalEvent,
+    fridayKaraokeEvent,
+    currentTime: today,
+  });
 
   function retryQueries() {
     void upcomingQuery.refetch();

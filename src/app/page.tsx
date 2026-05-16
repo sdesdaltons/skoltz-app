@@ -23,6 +23,7 @@ import {
   type UIEvent,
 } from "@/features/events";
 import { useAuth } from "@/features/auth/hooks";
+import { useRewards, type UIReward } from "@/features/rewards";
 import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
@@ -106,6 +107,14 @@ function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
   );
 }
 
+function isFriday(date: Date) {
+  return date.getDay() === 5;
+}
+
+function isKaraokeEvent(event: UIEvent) {
+  return event.categories.includes("karaoke");
+}
+
 function isOngoingEvent(event: UIEvent, currentTime: Date) {
   const currentTimeValue = currentTime.getTime();
 
@@ -139,6 +148,25 @@ function isFutureTonightEvent(event: UIEvent, currentTime: Date) {
   );
 }
 
+function isCurrentOrFutureEvent(event: UIEvent, currentTime: Date) {
+  return event.endTime.getTime() > currentTime.getTime();
+}
+
+function selectFridayKaraokeEvent(events: UIEvent[], currentTime: Date) {
+  if (!isFriday(currentTime)) {
+    return undefined;
+  }
+
+  return sortEventsByStartTime(
+    events.filter(
+      (event) =>
+        isKaraokeEvent(event) &&
+        isCurrentOrFutureEvent(event, currentTime) &&
+        eventOccursOnDate(event, dateKey(currentTime))
+    )
+  )[0];
+}
+
 function sortEventsByStartTime(events: UIEvent[]) {
   return [...events].sort(
     (firstEvent, secondEvent) =>
@@ -165,6 +193,7 @@ function sortEventsByFuturePriority(events: UIEvent[]) {
 }
 
 function selectFocalEvent(events: UIEvent[], currentTime: Date) {
+  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const startingSoonEvents = sortEventsByLifecyclePriority(
     events.filter((event) => isStartingSoonTonightEvent(event, currentTime))
   );
@@ -179,6 +208,7 @@ function selectFocalEvent(events: UIEvent[], currentTime: Date) {
   );
 
   return (
+    fridayKaraokeEvent ??
     startingSoonEvents[0] ??
     ongoingEvents[0] ??
     futureTonightEvents[0] ??
@@ -199,11 +229,20 @@ const calendarMonthLabelFormatter = new Intl.DateTimeFormat("en-US", {
 
 function CompactEventCard({
   event,
+  currentTime,
   showAstrosSpecials = false,
 }: {
   event: UIEvent;
+  currentTime: Date;
   showAstrosSpecials?: boolean;
 }) {
+  const statusLabel = getFocalStatusLabel(event, currentTime);
+  const showStatus = statusLabel !== "Featured";
+  const isFridayKaraoke =
+    isFriday(currentTime) &&
+    isKaraokeEvent(event) &&
+    eventOccursOnDate(event, dateKey(currentTime));
+
   return (
     <a
       href="#calendar"
@@ -216,6 +255,10 @@ function CompactEventCard({
               {category}
             </SbBadge>
           ))}
+          {isFridayKaraoke ? (
+            <SbBadge tone="warning">Friday feature</SbBadge>
+          ) : null}
+          {showStatus ? <SbBadge tone="blue">{statusLabel}</SbBadge> : null}
         </div>
 
         <div className="space-y-1">
@@ -238,6 +281,93 @@ function CompactEventCard({
   );
 }
 
+function RewardsHowItWorks() {
+  const steps = [
+    ["1", "Check in", "Open rewards when you arrive at Skoltz."],
+    ["2", "Earn points", "Skoltz confirms eligible visits after check-in."],
+    ["3", "Use rewards", "View available rewards from your account."],
+  ];
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-3">
+      {steps.map(([step, title, description]) => (
+        <div
+          key={step}
+          className="rounded-md border border-border/70 bg-surface-1 p-2.5"
+        >
+          <div className="flex items-start gap-2">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-sm border border-primary/40 bg-primary/15 text-xs font-semibold text-primary">
+              {step}
+            </span>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <p className="text-xs leading-5 text-muted-foreground">
+                {description}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RewardProgress({
+  signedIn,
+  nextReward,
+}: {
+  signedIn: boolean;
+  nextReward?: UIReward;
+}) {
+  return (
+    <div className="space-y-2 rounded-md border border-border/70 bg-surface-1 p-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">
+          Reward progress
+        </p>
+        {nextReward ? (
+          <span className="text-xs font-semibold text-primary">
+            Next: {nextReward.pointsLabel}
+          </span>
+        ) : null}
+      </div>
+      <div className="h-2 overflow-hidden rounded-sm bg-surface-2">
+        <div
+          className="h-full rounded-sm bg-primary/70"
+          style={{ width: "0%" }}
+        />
+      </div>
+      <p className="text-xs leading-5 text-muted-foreground">
+        {signedIn
+          ? "Check in at Skoltz to start building toward available rewards."
+          : "Sign in before you check in so rewards progress can be tracked."}
+      </p>
+    </div>
+  );
+}
+
+function RewardExamples({ rewards }: { rewards: UIReward[] }) {
+  if (rewards.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1">
+      {rewards.slice(0, 3).map((reward) => (
+        <div
+          key={reward.id}
+          className="min-w-48 rounded-md border border-border/70 bg-surface-1 p-2.5"
+        >
+          <SbBadge tone="success">{reward.pointsLabel}</SbBadge>
+          <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-foreground">
+            {reward.title}
+          </h3>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function getFocalStatusLabel(event: UIEvent, currentTime: Date) {
   if (isOngoingEvent(event, currentTime)) {
     return "Happening now";
@@ -257,6 +387,11 @@ function FocalEventCard({
   event: UIEvent;
   currentTime: Date;
 }) {
+  const isFridayKaraoke =
+    isFriday(currentTime) &&
+    isKaraokeEvent(event) &&
+    eventOccursOnDate(event, dateKey(currentTime));
+
   if (event.isAstros) {
     return (
       <SbAstrosHighlightCard
@@ -280,6 +415,9 @@ function FocalEventCard({
             {category}
           </SbBadge>
         ))}
+        {isFridayKaraoke ? (
+          <SbBadge tone="warning">Friday feature</SbBadge>
+        ) : null}
         <SbBadge tone="blue">{getFocalStatusLabel(event, currentTime)}</SbBadge>
       </div>
 
@@ -332,6 +470,7 @@ export default function Home() {
     : "Current month";
   const upcomingQuery = useUpcomingEvents();
   const calendarQuery = useCalendarEvents(calendarMonth);
+  const rewardsQuery = useRewards();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -345,6 +484,7 @@ export default function Home() {
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
+  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, today);
   const focalEvent = selectFocalEvent(events, today);
   const ongoingEvents = sortEventsByStartTime(
     events.filter(
@@ -381,6 +521,8 @@ export default function Home() {
     )
   );
   const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
+  const rewardExamples = rewardsQuery.data ?? [];
+  const nextReward = rewardExamples[0];
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
   const isEmpty = !isLoading && !isError && events.length === 0;
@@ -394,8 +536,11 @@ export default function Home() {
   const rewardsCtaDescription = !isAuthReady
     ? "Confirming your rewards and check-in access."
     : isSignedIn
-      ? "View your rewards and check in when you are at Skoltz."
+      ? "Check in when you arrive and keep an eye on available rewards."
       : "Rewards and venue check-ins are available after login.";
+  const heroDescription = fridayKaraokeEvent
+    ? `${fridayKaraokeEvent.title} runs ${fridayKaraokeEvent.displayTime}. Games and specials are still on around the bar.`
+    : "Catch tonight's games, events, and specials before you get to the bar.";
 
   function retryQueries() {
     void upcomingQuery.refetch();
@@ -418,31 +563,41 @@ export default function Home() {
                   Tonight at Skoltz
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                  Catch tonight&apos;s games, events, and specials before you get
-                  to the bar.
+                  {heroDescription}
                 </p>
               </div>
             </div>
 
-            <SbCard className="flex flex-col gap-2 border-border/80 bg-surface-2 p-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold sm:text-base">
-                  {rewardsCtaTitle}
-                </h2>
-                <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
-                  {rewardsCtaDescription}
-                </p>
+            <SbCard className="space-y-3 border-border/80 bg-surface-2 p-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm font-semibold sm:text-base">
+                      {rewardsCtaTitle}
+                    </h2>
+                    {isAuthReady && isSignedIn ? (
+                      <SbBadge tone="success">Ready</SbBadge>
+                    ) : null}
+                  </div>
+                  <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
+                    {rewardsCtaDescription}
+                  </p>
+                </div>
+                {isAuthReady ? (
+                  <SbButton
+                    asChild
+                    href={isSignedIn ? "/rewards" : "/login"}
+                    className="w-full sm:w-auto"
+                    size="sm"
+                  >
+                    {isSignedIn ? "View rewards" : "Sign in"}
+                  </SbButton>
+                ) : null}
               </div>
-              {isAuthReady ? (
-                <SbButton
-                  asChild
-                  href={isSignedIn ? "/rewards" : "/login"}
-                  className="w-full sm:w-auto"
-                  size="sm"
-                >
-                  {isSignedIn ? "View rewards" : "Sign in"}
-                </SbButton>
-              ) : null}
+
+              <RewardsHowItWorks />
+              <RewardProgress signedIn={isSignedIn} nextReward={nextReward} />
+              <RewardExamples rewards={rewardExamples} />
             </SbCard>
 
             <PwaInstallBanner />
@@ -544,6 +699,7 @@ export default function Home() {
                   <CompactEventCard
                     key={event.id}
                     event={event}
+                    currentTime={today}
                     showAstrosSpecials
                   />
                 ))}
@@ -575,7 +731,11 @@ export default function Home() {
             {!isLoading && !isError && upcomingEvents.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {upcomingEvents.map((event) => (
-                  <CompactEventCard key={event.id} event={event} />
+                  <CompactEventCard
+                    key={event.id}
+                    event={event}
+                    currentTime={today}
+                  />
                 ))}
               </div>
             ) : null}

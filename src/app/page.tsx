@@ -28,29 +28,50 @@ import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
 
+type PromoCard = {
+  image: typeof tuesdaySpecialPromo;
+  alt: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  schedule:
+    | {
+        type: "weekly";
+        day: number;
+      }
+    | {
+        type: "date";
+        month: number;
+        day: number;
+      };
+};
+
 const promoCards = [
-  {
-    image: tuesdaySpecialPromo,
-    alt: "Skoltz Tuesday specials graphic",
-    title: "Tuesday specials",
-    subtitle: "Tacos, Ziegenbock pints, wells, and featured shots.",
-    ctaText: "Ask at the bar",
-  },
   {
     image: crawfishPromo,
     alt: "Skoltz crawfish special graphic",
     title: "Crawfish night",
     subtitle: "Seasonal food special with cold drinks and loud vibes.",
-    ctaText: "Limited run",
+    ctaText: "Sat May 16",
+    schedule: { type: "date", month: 4, day: 16 },
+  },
+  {
+    image: tuesdaySpecialPromo,
+    alt: "Skoltz Tuesday specials graphic",
+    title: "Tuesday specials",
+    subtitle: "Tacos, Ziegenbock pints, wells, and featured shots.",
+    ctaText: "Tuesdays",
+    schedule: { type: "weekly", day: 2 },
   },
   {
     image: dartTournamentPromo,
     alt: "Skoltz dart tournament graphic",
     title: "Dart tournament",
     subtitle: "Blind draw partners, added prize money, and signups on site.",
-    ctaText: "Join in",
+    ctaText: "Mon May 25",
+    schedule: { type: "date", month: 4, day: 25 },
   },
-];
+] satisfies PromoCard[];
 
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
 const tonightWindowEndHour = 4;
@@ -99,6 +120,44 @@ function dateKey(date: Date) {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function getPromoSortDate(promo: PromoCard, currentDate: Date) {
+  const todayStart = startOfDay(currentDate);
+
+  if (promo.schedule.type === "weekly") {
+    const nextDate = startOfDay(currentDate);
+    const daysUntilPromo =
+      (promo.schedule.day - currentDate.getDay() + 7) % 7;
+
+    nextDate.setDate(currentDate.getDate() + daysUntilPromo);
+
+    return nextDate;
+  }
+
+  const scheduledDate = new Date(
+    currentDate.getFullYear(),
+    promo.schedule.month,
+    promo.schedule.day
+  );
+
+  if (scheduledDate < todayStart) {
+    scheduledDate.setFullYear(currentDate.getFullYear() + 1);
+  }
+
+  return scheduledDate;
+}
+
+function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
+  return [...promos].sort(
+    (firstPromo, secondPromo) =>
+      getPromoSortDate(firstPromo, currentDate).getTime() -
+      getPromoSortDate(secondPromo, currentDate).getTime()
+  );
 }
 
 function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
@@ -601,6 +660,7 @@ export default function Home() {
   const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
   const rewardExamples = rewardsQuery.data ?? [];
   const nextReward = rewardExamples[0];
+  const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
   const isEmpty = !isLoading && !isError && events.length === 0;
@@ -830,7 +890,7 @@ export default function Home() {
             />
 
             <div className="flex gap-4 overflow-x-auto pb-2">
-              {promoCards.map((promo) => (
+              {sortedPromoCards.map((promo) => (
                 <SbPromoCard
                   key={promo.title}
                   image={promo.image}

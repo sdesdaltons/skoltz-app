@@ -10,9 +10,11 @@ import {
 
 import { adaptRawEvents, groupUIEventsByDate } from "./adapters"
 import { rawMockEvents } from "./mock/events"
+import { readMlbAstrosEvents } from "./sources/mlb"
 import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 
 const eventStaleTime = 5 * 60 * 1000
+const upcomingSportsWindowDays = 45
 
 type EventRow = {
   id: string
@@ -72,15 +74,37 @@ async function readSupabaseEvents(): Promise<RawEvent[]> {
   return (data ?? []).map(mapEventRowToRawEvent)
 }
 
-function readEvents(): Promise<RawEvent[]> {
+async function readVenueEvents(): Promise<RawEvent[]> {
   return hasSupabaseConfig() ? readSupabaseEvents() : readMockEvents()
+}
+
+async function readSourceBackedSportsEvents(
+  startDate: Date,
+  endDate: Date
+): Promise<RawEvent[]> {
+  try {
+    return await readMlbAstrosEvents(startDate, endDate)
+  } catch {
+    return []
+  }
+}
+
+async function readEvents(startDate: Date, endDate: Date): Promise<RawEvent[]> {
+  const [venueEvents, sportsEvents] = await Promise.all([
+    readVenueEvents(),
+    readSourceBackedSportsEvents(startDate, endDate),
+  ])
+
+  return [...venueEvents, ...sportsEvents]
 }
 
 function isPublicEvent(rawEvent: RawEvent) {
   return (
     !rawEvent.categories.includes("pool") &&
     !rawEvent.categories.includes("rockets") &&
-    !rawEvent.categories.includes("texans")
+    !rawEvent.categories.includes("texans") &&
+    (!rawEvent.categories.includes("astros") ||
+      rawEvent.id.startsWith("mlb-astros-"))
   )
 }
 
@@ -104,13 +128,31 @@ function startOfToday() {
   return new Date(today.getFullYear(), today.getMonth(), today.getDate())
 }
 
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date)
+
+  nextDate.setDate(date.getDate() + days)
+
+  return nextDate
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
 export function useUpcomingEvents() {
   return useQuery({
     queryKey: queryKeys.events.upcoming,
     queryFn: async () => {
-      const rawEvents = await readEvents()
+      const startDate = startOfToday()
+      const endDate = addDays(startDate, upcomingSportsWindowDays)
+      const rawEvents = await readEvents(startDate, endDate)
       const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter(
-        (event) => event.endTime.getTime() >= startOfToday().getTime()
+        (event) => event.endTime.getTime() >= startDate.getTime()
       )
 
       return events.sort(
@@ -127,7 +169,7 @@ export function useCalendarEvents(month: Date) {
   return useQuery({
     queryKey: queryKeys.events.calendar(monthKey(month)),
     queryFn: async () => {
-      const rawEvents = await readEvents()
+      const rawEvents = await readEvents(startOfMonth(month), endOfMonth(month))
       const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter((event) =>
         isInMonth(event, month)
       )

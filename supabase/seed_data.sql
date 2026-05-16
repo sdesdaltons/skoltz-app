@@ -8,6 +8,7 @@ where
   categories && array['pool']::text[]
   or categories && array['rockets']::text[]
   or categories && array['texans']::text[]
+  or categories && array['astros']::text[]
   or title in (
     'Karaoke kickoff night',
     'Karaoke late night',
@@ -44,7 +45,7 @@ where
 
 delete from public.sports_games
 where
-  category in ('rockets', 'texans')
+  category in ('astros', 'rockets', 'texans')
   or title in (
   'Astros watch party opener',
   'Astros vs Rangers',
@@ -70,17 +71,7 @@ where title ilike '%pool%';
 
 with schedule as (
   select
-    current_date as today,
-    current_date + 1 as tomorrow,
-    current_date + (((5 - extract(dow from current_date)::int + 7) % 7))::int as next_friday,
-    case
-      when extract(dow from current_date)::int = 6 then current_date + 7
-      else current_date + (((6 - extract(dow from current_date)::int + 7) % 7))::int
-    end as upcoming_saturday,
-    case
-      when extract(dow from current_date)::int = 0 then current_date + 7
-      else current_date + (((0 - extract(dow from current_date)::int + 7) % 7))::int
-    end as upcoming_sunday
+    current_date + (((5 - extract(dow from current_date)::int + 7) % 7))::int as next_friday
 ),
 seed as (
   select
@@ -94,26 +85,6 @@ seed as (
   cross join lateral (
     values
       (
-        'Astros watch party opener',
-        'Astros game night with game-day specials.',
-        schedule.tomorrow,
-        time '19:10',
-        schedule.tomorrow,
-        time '22:30',
-        array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
-        'Astros Friday watch party',
-        'Astros watch party before Friday karaoke.',
-        schedule.next_friday,
-        time '19:10',
-        schedule.next_friday,
-        time '22:30',
-        array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
         'Friday karaoke at Skoltz',
         'Friday karaoke on the Skoltz stage.',
         schedule.next_friday,
@@ -124,36 +95,6 @@ seed as (
         'Skoltz stage'
       ),
       (
-        'Astros weekend watch party',
-        'Weekend Astros watch party with bar specials.',
-        schedule.upcoming_saturday,
-        time '18:40',
-        schedule.upcoming_saturday,
-        time '22:00',
-        array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
-        'Astros Sunday baseball',
-        'Sunday Astros watch party at Skoltz.',
-        schedule.upcoming_sunday,
-        time '13:10',
-        schedule.upcoming_sunday,
-        time '16:30',
-        array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
-        'Astros road game watch',
-        'Catch the Astros road game with bar specials.',
-        schedule.next_friday + 7,
-        time '18:40',
-        schedule.next_friday + 7,
-        time '22:00',
-        array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
         'Next Friday karaoke',
         'Friday karaoke with drink specials.',
         schedule.next_friday + 7,
@@ -162,16 +103,6 @@ seed as (
         time '01:30',
         array['karaoke']::text[],
         'Skoltz stage'
-      ),
-      (
-        'Astros homestand night',
-        'Astros homestand watch party on the big screens.',
-        schedule.next_friday + 11,
-        time '19:10',
-        schedule.next_friday + 11,
-        time '22:30',
-        array['astros']::text[],
-        'Skoltz main bar'
       )
   ) as v(title, description, start_date, start_time, end_date, end_time, categories, location)
 )
@@ -193,58 +124,6 @@ select
 from seed
 where not exists (
   select 1 from public.events where public.events.title = seed.title
-);
-
-with schedule as (
-  select
-    current_date + 1 as tomorrow,
-    current_date + (((5 - extract(dow from current_date)::int + 7) % 7))::int as next_friday,
-    case
-      when extract(dow from current_date)::int = 6 then current_date + 7
-      else current_date + (((6 - extract(dow from current_date)::int + 7) % 7))::int
-    end as upcoming_saturday,
-    case
-      when extract(dow from current_date)::int = 0 then current_date + 7
-      else current_date + (((0 - extract(dow from current_date)::int + 7) % 7))::int
-    end as upcoming_sunday
-),
-seed as (
-  select
-    v.title,
-    v.league,
-    v.home_team,
-    v.away_team,
-    ((v.start_date + v.start_time) at time zone 'America/Chicago') as start_time,
-    v.category
-  from schedule
-  cross join lateral (
-    values
-      ('Astros watch party opener', 'MLB', 'Astros', 'Rangers', schedule.tomorrow, time '19:10', 'astros'),
-      ('Astros Friday watch party', 'MLB', 'Astros', 'Mariners', schedule.next_friday, time '19:10', 'astros'),
-      ('Astros weekend watch party', 'MLB', 'Astros', 'Angels', schedule.upcoming_saturday, time '18:40', 'astros'),
-      ('Astros Sunday baseball', 'MLB', 'Astros', 'Tigers', schedule.upcoming_sunday, time '13:10', 'astros'),
-      ('Astros road game watch', 'MLB', 'Rays', 'Astros', schedule.next_friday + 7, time '18:40', 'astros'),
-      ('Astros homestand night', 'MLB', 'Astros', 'Athletics', schedule.next_friday + 11, time '19:10', 'astros')
-  ) as v(title, league, home_team, away_team, start_date, start_time, category)
-)
-insert into public.sports_games (
-  title,
-  league,
-  home_team,
-  away_team,
-  start_time,
-  category
-)
-select
-  seed.title,
-  seed.league,
-  seed.home_team,
-  seed.away_team,
-  seed.start_time,
-  seed.category
-from seed
-where not exists (
-  select 1 from public.sports_games where public.sports_games.title = seed.title
 );
 
 insert into public.rewards (

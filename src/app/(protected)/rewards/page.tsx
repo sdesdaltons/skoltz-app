@@ -7,6 +7,8 @@ import { SbBadge, SbButton, SbCard } from "@/components/ui"
 import { CheckInButton } from "@/features/checkins"
 import { type UIReward, useRewards } from "@/features/rewards"
 
+const pointsPerEligibleCheckIn = 10
+
 function RewardsHowItWorks() {
   const steps = [
     ["1", "Check in", "Use this page when you arrive at Skoltz."],
@@ -42,18 +44,19 @@ function PointsExplanationCard() {
         <SbBadge tone="blue">Points</SbBadge>
         <h2 className="text-xl font-semibold">How points are calculated</h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Points are based on eligible in-person check-ins. The app sends a
-          location-gated check-in request, then Skoltz verifies it on the server.
-          Only one check-in can count within a 12-hour window.
+          Each eligible, server-verified check-in earns{" "}
+          {pointsPerEligibleCheckIn} points. The app sends a location-gated
+          check-in request, then Skoltz verifies it on the server. Only one
+          check-in can count within a 12-hour window.
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
         <div className="rounded-md border border-border bg-surface-1 p-3">
           <p className="text-sm font-semibold text-foreground">
-            1 eligible visit
+            1 eligible check-in
           </p>
           <p className="text-xs leading-5 text-muted-foreground">
-            Starts with a verified check-in at Skoltz.
+            Worth {pointsPerEligibleCheckIn} points after verification.
           </p>
         </div>
         <div className="rounded-md border border-border bg-surface-1 p-3">
@@ -100,7 +103,9 @@ function RewardProgressCard({ nextReward }: { nextReward?: UIReward }) {
         </div>
         <p className="text-xs leading-5 text-muted-foreground">
           {nextReward
-            ? `${nextReward.title} is the nearest visible reward target.`
+            ? `${nextReward.title} is the nearest visible reward target at about ${Math.ceil(
+                nextReward.pointsRequired / pointsPerEligibleCheckIn
+              )} eligible check-ins.`
             : "Reward targets will appear when the catalogue loads."}
         </p>
       </div>

@@ -1,4 +1,12 @@
-export type EventCategory = "astros" | "rockets" | "texans" | "karaoke" | "pool"
+export type EventCategory =
+  | "astros"
+  | "rockets"
+  | "texans"
+  | "mlb"
+  | "nba"
+  | "nfl"
+  | "karaoke"
+  | "pool"
 
 export type EventCategoryInfo = {
   value: EventCategory

@@ -78,12 +78,16 @@ const tonightWindowEndHour = 4;
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
 ): "blue" | "red" | "success" | "warning" | "neutral" {
-  if (category === "astros" || category === "texans") {
+  if (category === "astros" || category === "texans" || category === "mlb") {
     return "blue";
   }
 
-  if (category === "rockets") {
+  if (category === "rockets" || category === "nba") {
     return "red";
+  }
+
+  if (category === "nfl") {
+    return "success";
   }
 
   if (category === "karaoke") {
@@ -110,7 +114,11 @@ function categoryPriority(category: UIEvent["primaryCategory"]) {
     return 3;
   }
 
-  return 4;
+  if (category === "mlb" || category === "nba" || category === "nfl") {
+    return 4;
+  }
+
+  return 5;
 }
 
 function dateKey(date: Date) {
@@ -351,9 +359,9 @@ function CompactEventCard({
     >
       <div className="space-y-1.5">
         <div className="flex flex-wrap gap-1.5">
-          {event.categories.map((category) => (
-            <SbBadge key={category} tone={eventCategoryTone(category)}>
-              {category}
+          {event.categoryInfo.map((category) => (
+            <SbBadge key={category.value} tone={eventCategoryTone(category.value)}>
+              {category.label}
             </SbBadge>
           ))}
           {isFridayKaraoke ? (
@@ -424,9 +432,9 @@ function FocalEventCard({
   return (
     <SbCard className="space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)]">
       <div className="flex flex-wrap gap-1.5">
-        {event.categories.map((category) => (
-          <SbBadge key={category} tone={eventCategoryTone(category)}>
-            {category}
+        {event.categoryInfo.map((category) => (
+          <SbBadge key={category.value} tone={eventCategoryTone(category.value)}>
+            {category.label}
           </SbBadge>
         ))}
         {isFridayKaraoke ? (

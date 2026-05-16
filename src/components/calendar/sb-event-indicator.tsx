@@ -1,11 +1,22 @@
 import { cn } from "@/lib/utils"
 
-export type SbEventKind = "astros" | "rockets" | "texans" | "karaoke" | "pool"
+export type SbEventKind =
+  | "astros"
+  | "rockets"
+  | "texans"
+  | "mlb"
+  | "nba"
+  | "nfl"
+  | "karaoke"
+  | "pool"
 
 const eventStyles: Partial<Record<SbEventKind, string>> = {
   astros: "bg-primary",
   rockets: "bg-destructive",
   texans: "bg-primary ring-1 ring-destructive/80",
+  mlb: "bg-primary/80",
+  nba: "bg-destructive/80",
+  nfl: "bg-success",
   karaoke: "bg-warning",
 }
 
@@ -13,6 +24,9 @@ const eventLabels: Partial<Record<SbEventKind, string>> = {
   astros: "Astros",
   rockets: "Rockets",
   texans: "Texans",
+  mlb: "MLB Playoffs",
+  nba: "NBA Playoffs",
+  nfl: "NFL Playoffs",
   karaoke: "Karaoke",
 }
 

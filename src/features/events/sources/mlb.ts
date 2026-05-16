@@ -11,7 +11,10 @@ type MlbScheduleResponse = {
 
 type MlbGame = {
   gamePk: number
+  gameType?: string
   gameDate: string
+  description?: string
+  seriesDescription?: string
   status?: {
     detailedState?: string
   }
@@ -64,6 +67,31 @@ function mapMlbGameToRawEvent(game: MlbGame): RawEvent {
   }
 }
 
+function buildMlbPostseasonTitle(game: MlbGame) {
+  const awayTeam = game.teams.away.team.name
+  const homeTeam = game.teams.home.team.name
+
+  return `MLB Playoffs: ${awayTeam} at ${homeTeam}`
+}
+
+function mapMlbPostseasonGameToRawEvent(game: MlbGame): RawEvent {
+  const startTime = new Date(game.gameDate)
+  const endTime = new Date(startTime.getTime() + estimatedGameDurationMs)
+  const seriesDescription = game.seriesDescription ?? game.description
+
+  return {
+    id: `mlb-postseason-${game.gamePk}`,
+    title: buildMlbPostseasonTitle(game),
+    description: seriesDescription
+      ? `${seriesDescription} from the official MLB schedule.`
+      : "MLB postseason game from the official MLB schedule.",
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    categories: ["mlb"],
+    location: game.venue?.name ?? "MLB postseason game",
+  }
+}
+
 export async function readMlbAstrosEvents(
   startDate: Date,
   endDate: Date
@@ -86,5 +114,31 @@ export async function readMlbAstrosEvents(
 
   return (data.dates ?? [])
     .flatMap((date) => date.games ?? [])
+    .filter((game) => game.gameType === "R")
     .map(mapMlbGameToRawEvent)
+}
+
+export async function readMlbPostseasonEvents(
+  startDate: Date,
+  endDate: Date
+): Promise<RawEvent[]> {
+  const params = new URLSearchParams({
+    sportId: "1",
+    startDate: formatSourceDate(startDate),
+    endDate: formatSourceDate(endDate),
+    gameTypes: "F,D,L,W",
+  })
+  const response = await fetch(
+    `https://statsapi.mlb.com/api/v1/schedule?${params.toString()}`
+  )
+
+  if (!response.ok) {
+    throw new Error("MLB postseason schedule request failed.")
+  }
+
+  const data = (await response.json()) as MlbScheduleResponse
+
+  return (data.dates ?? [])
+    .flatMap((date) => date.games ?? [])
+    .map(mapMlbPostseasonGameToRawEvent)
 }

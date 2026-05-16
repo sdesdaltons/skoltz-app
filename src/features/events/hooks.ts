@@ -10,7 +10,8 @@ import {
 
 import { adaptRawEvents, groupUIEventsByDate } from "./adapters"
 import { rawMockEvents } from "./mock/events"
-import { readMlbAstrosEvents } from "./sources/mlb"
+import { readEspnPostseasonEvents } from "./sources/espn"
+import { readMlbAstrosEvents, readMlbPostseasonEvents } from "./sources/mlb"
 import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 
 const eventStaleTime = 5 * 60 * 1000
@@ -87,11 +88,15 @@ async function readSourceBackedSportsEvents(
   startDate: Date,
   endDate: Date
 ): Promise<RawEvent[]> {
-  try {
-    return await readMlbAstrosEvents(startDate, endDate)
-  } catch {
-    return []
-  }
+  const results = await Promise.allSettled([
+    readMlbAstrosEvents(startDate, endDate),
+    readMlbPostseasonEvents(startDate, endDate),
+    readEspnPostseasonEvents(startDate, endDate),
+  ])
+
+  return results.flatMap((result) =>
+    result.status === "fulfilled" ? result.value : []
+  )
 }
 
 async function readEvents(startDate: Date, endDate: Date): Promise<RawEvent[]> {
@@ -105,6 +110,14 @@ async function readEvents(startDate: Date, endDate: Date): Promise<RawEvent[]> {
 
 function isPublicEvent(rawEvent: RawEvent) {
   const isKaraoke = rawEvent.categories.includes("karaoke")
+  const isSourceBackedSportsEvent =
+    rawEvent.id.startsWith("mlb-astros-") ||
+    rawEvent.id.startsWith("mlb-postseason-") ||
+    rawEvent.id.startsWith("espn-nba-postseason-") ||
+    rawEvent.id.startsWith("espn-nfl-postseason-")
+  const isSportsEvent = rawEvent.categories.some((category) =>
+    ["astros", "rockets", "texans", "mlb", "nba", "nfl"].includes(category)
+  )
 
   if (isKaraoke && venueWeekdayFormatter.format(new Date(rawEvent.startTime)) !== "Fri") {
     return false
@@ -114,8 +127,7 @@ function isPublicEvent(rawEvent: RawEvent) {
     !rawEvent.categories.includes("pool") &&
     !rawEvent.categories.includes("rockets") &&
     !rawEvent.categories.includes("texans") &&
-    (!rawEvent.categories.includes("astros") ||
-      rawEvent.id.startsWith("mlb-astros-"))
+    (!isSportsEvent || isSourceBackedSportsEvent)
   )
 }
 

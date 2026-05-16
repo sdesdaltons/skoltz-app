@@ -9,6 +9,9 @@ const categoryLabels: Record<EventCategory, string> = {
   astros: "Astros",
   rockets: "Rockets",
   texans: "Texans",
+  mlb: "MLB Playoffs",
+  nba: "NBA Playoffs",
+  nfl: "NFL Playoffs",
   karaoke: "Karaoke",
   pool: "Event",
 }

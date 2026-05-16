@@ -24,7 +24,7 @@ create table if not exists public.events (
   constraint events_time_order_check check (end_time > start_time),
   constraint events_categories_not_empty_check check (array_length(categories, 1) > 0),
   constraint events_categories_allowed_check check (
-    categories <@ array['astros', 'rockets', 'texans', 'karaoke', 'pool']::text[]
+    categories <@ array['astros', 'rockets', 'texans', 'mlb', 'nba', 'nfl', 'karaoke', 'pool']::text[]
   )
 );
 
@@ -39,7 +39,7 @@ create table if not exists public.sports_games (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint sports_games_category_allowed_check check (
-    category in ('astros', 'rockets', 'texans')
+    category in ('astros', 'rockets', 'texans', 'mlb', 'nba', 'nfl')
   )
 );
 
@@ -51,6 +51,22 @@ create table if not exists public.checkins (
   longitude double precision not null,
   created_at timestamptz not null default now()
 );
+
+alter table public.events
+  drop constraint if exists events_categories_allowed_check;
+
+alter table public.events
+  add constraint events_categories_allowed_check check (
+    categories <@ array['astros', 'rockets', 'texans', 'mlb', 'nba', 'nfl', 'karaoke', 'pool']::text[]
+  );
+
+alter table public.sports_games
+  drop constraint if exists sports_games_category_allowed_check;
+
+alter table public.sports_games
+  add constraint sports_games_category_allowed_check check (
+    category in ('astros', 'rockets', 'texans', 'mlb', 'nba', 'nfl')
+  );
 
 create index if not exists events_start_time_idx on public.events (start_time);
 create index if not exists sports_games_start_time_idx on public.sports_games (start_time);

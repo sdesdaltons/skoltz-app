@@ -9,6 +9,9 @@ where
   or categories && array['rockets']::text[]
   or categories && array['texans']::text[]
   or categories && array['astros']::text[]
+  or categories && array['mlb']::text[]
+  or categories && array['nba']::text[]
+  or categories && array['nfl']::text[]
   or (
     categories && array['karaoke']::text[]
     and extract(isodow from start_time at time zone 'America/Chicago') <> 5
@@ -50,7 +53,7 @@ where
 
 delete from public.sports_games
 where
-  category in ('astros', 'rockets', 'texans')
+  category in ('astros', 'rockets', 'texans', 'mlb', 'nba', 'nfl')
   or title in (
   'Astros watch party opener',
   'Astros vs Rangers',

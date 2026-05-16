@@ -11,7 +11,20 @@ const categoryTone: Partial<
   astros: "blue",
   rockets: "red",
   texans: "blue",
+  mlb: "blue",
+  nba: "red",
+  nfl: "success",
   karaoke: "warning",
+}
+
+const categoryLabel: Partial<Record<SbEventKind, string>> = {
+  astros: "Astros",
+  rockets: "Rockets",
+  texans: "Texans",
+  mlb: "MLB Playoffs",
+  nba: "NBA Playoffs",
+  nfl: "NFL Playoffs",
+  karaoke: "Karaoke",
 }
 
 export function SbEventCard({
@@ -42,7 +55,7 @@ export function SbEventCard({
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
           <SbBadge key={category} tone={categoryTone[category] ?? "neutral"}>
-            {category}
+            {categoryLabel[category] ?? "Event"}
           </SbBadge>
         ))}
       </div>

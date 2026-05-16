@@ -83,6 +83,11 @@ export function SbDayDetail({
                   <p className="text-xs text-muted-foreground">
                     {event.time ?? "Time TBD"}
                   </p>
+                  {event.description ? (
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {event.description}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))

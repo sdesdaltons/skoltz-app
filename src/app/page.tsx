@@ -265,6 +265,7 @@ function getPromoCalendarEventsForMonth(
             title: promo.title,
             kind: "special",
             time: promo.ctaText,
+            description: promo.subtitle,
           },
         });
       }
@@ -286,6 +287,7 @@ function getPromoCalendarEventsForMonth(
           title: promo.title,
           kind: "special",
           time: promo.ctaText,
+          description: promo.subtitle,
         },
       });
     }
@@ -719,6 +721,7 @@ function toCalendarEvent(event: UIEvent): SbCalendarEvent {
     kind: event.primaryCategory,
     time: event.displayTime,
     logoUrls: event.logoUrls,
+    description: event.description,
   };
 }
 

@@ -9,9 +9,14 @@ where
   or categories && array['rockets']::text[]
   or categories && array['texans']::text[]
   or categories && array['astros']::text[]
+  or (
+    categories && array['karaoke']::text[]
+    and extract(isodow from start_time at time zone 'America/Chicago') <> 5
+  )
   or title in (
     'Karaoke kickoff night',
     'Karaoke late night',
+    'Karaoke night',
     'Karaoke Thursday',
     'Karaoke first Thursday',
     'Friday karaoke kickoff',

@@ -15,6 +15,11 @@ import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 
 const eventStaleTime = 5 * 60 * 1000
 const upcomingSportsWindowDays = 45
+const venueTimeZone = "America/Chicago"
+const venueWeekdayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: venueTimeZone,
+  weekday: "short",
+})
 
 type EventRow = {
   id: string
@@ -99,6 +104,12 @@ async function readEvents(startDate: Date, endDate: Date): Promise<RawEvent[]> {
 }
 
 function isPublicEvent(rawEvent: RawEvent) {
+  const isKaraoke = rawEvent.categories.includes("karaoke")
+
+  if (isKaraoke && venueWeekdayFormatter.format(new Date(rawEvent.startTime)) !== "Fri") {
+    return false
+  }
+
   return (
     !rawEvent.categories.includes("pool") &&
     !rawEvent.categories.includes("rockets") &&

@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Skoltz
 
-## Getting Started
+Skoltz is a Next.js PWA-first app for sports-bar events, rewards, auth, and check-ins. The app uses Tailwind CSS, shadcn/ui conventions, TanStack Query, and Supabase.
 
-First, run the development server:
+## Install
+
+```bash
+npm install
+```
+
+## Environment Variables
+
+Create a local `.env.local` from `.env.example`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+Only use the Supabase project URL and anon/public key in frontend or Vercel environments. Never use privileged server keys in this app.
+
+## Local Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the local Next.js URL printed by the dev server.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+## Supabase SQL
 
-To learn more about Next.js, take a look at the following resources:
+Run these scripts in the Supabase SQL Editor before validating a preview deployment:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. `supabase/supabase_schema.sql`
+2. `supabase/seed_data.sql`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The schema script creates the required tables, constraints, indexes, and RLS policies. The seed script adds starter events, a sports game, and rewards.
 
-## Deploy on Vercel
+## Vercel Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create or open the Vercel project.
+2. Add these Preview environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Deploy or redeploy the preview.
+4. Run the checklist in `docs/DEPLOYMENT_VALIDATION.md`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Package Scripts
+
+- `npm run dev` - start local development
+- `npm run lint` - run ESLint
+- `npm run build` - build for production
+- `npm run start` - start the production server after building

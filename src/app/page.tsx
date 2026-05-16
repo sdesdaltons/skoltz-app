@@ -9,14 +9,42 @@ import {
 import { OfflineBanner, SbEmptyState } from "@/components/feedback";
 import { SbContainer, SbSection, SbSectionHeader } from "@/components/layout";
 import { SbBottomNav } from "@/components/navigation";
+import { SbPromoCard } from "@/components/promos";
 import { SbBadge, SbButton, SbCard } from "@/components/ui";
 import {
   useCalendarEvents,
   useUpcomingEvents,
   type UIEvent,
 } from "@/features/events";
+import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
+import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
+import dartTournamentPromo from "../../Ads/image000000.jpg";
 
 const calendarMonth = new Date(2026, 4, 1);
+
+const promoCards = [
+  {
+    image: tuesdaySpecialPromo,
+    alt: "Skoltz Tuesday specials graphic",
+    title: "Tuesday specials",
+    subtitle: "Tacos, Ziegenbock pints, wells, and featured shots.",
+    ctaText: "Ask at the bar",
+  },
+  {
+    image: crawfishPromo,
+    alt: "Skoltz crawfish special graphic",
+    title: "Crawfish night",
+    subtitle: "Seasonal food special with cold drinks and loud vibes.",
+    ctaText: "Limited run",
+  },
+  {
+    image: dartTournamentPromo,
+    alt: "Skoltz dart tournament graphic",
+    title: "Dart tournament",
+    subtitle: "Blind draw partners, added prize money, and signups on site.",
+    ctaText: "Join in",
+  },
+];
 
 function toCalendarEvent(event: UIEvent): SbCalendarEvent {
   return {
@@ -138,6 +166,29 @@ export default function Home() {
                   }
               />
             ) : null}
+          </SbContainer>
+        </SbSection>
+
+        <SbSection className="py-8">
+          <SbContainer className="space-y-5">
+            <SbSectionHeader
+              title="Featured specials"
+              subtitle="Food, drinks, and venue promos happening around the bar."
+            />
+
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {promoCards.map((promo) => (
+                <SbPromoCard
+                  key={promo.title}
+                  image={promo.image}
+                  alt={promo.alt}
+                  title={promo.title}
+                  subtitle={promo.subtitle}
+                  ctaText={promo.ctaText}
+                  className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
+                />
+              ))}
+            </div>
           </SbContainer>
         </SbSection>
 

@@ -106,9 +106,13 @@ const sportsCalendarKinds = new Set<SbCalendarEvent["kind"]>([
 ]);
 
 const featuredCalendarKinds = new Set<SbCalendarEvent["kind"]>([
-  "astros",
   "karaoke",
 ]);
+
+const astrosGametimeSpecials = [
+  "$2 Hot Dogs",
+  "$2 Ziegenbock Pints",
+].join(" and ");
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -751,6 +755,27 @@ function toCalendarEventsByDate(
   ) as Record<string, SbCalendarEvent[]>;
 }
 
+function getAstrosSpecialCalendarEvents(
+  eventsByDate: Record<string, UIEvent[]> | undefined
+): Record<string, SbCalendarEvent[]> {
+  return Object.fromEntries(
+    Object.entries(eventsByDate ?? {})
+      .filter(([, events]) => events.some((event) => event.isAstros))
+      .map(([date]) => [
+        date,
+        [
+          {
+            id: `astros-special-${date}`,
+            title: "Astros gametime specials",
+            kind: "special" as const,
+            time: "Astros game",
+            description: astrosGametimeSpecials,
+          },
+        ],
+      ])
+  ) as Record<string, SbCalendarEvent[]>;
+}
+
 const eventStartTimeFormatter = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
@@ -1035,7 +1060,10 @@ export default function Home() {
   const visibleUpcomingEvents = upcomingEvents.slice(0, homepageUpcomingLimit);
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
   const calendarEvents = mergeCalendarEvents(
-    toCalendarEventsByDate(calendarQuery.data),
+    mergeCalendarEvents(
+      toCalendarEventsByDate(calendarQuery.data),
+      getAstrosSpecialCalendarEvents(calendarQuery.data)
+    ),
     getPromoCalendarEventsForMonth(promoCards, calendarMonth, today)
   );
   const filteredCalendarEvents = filterCalendarEvents(

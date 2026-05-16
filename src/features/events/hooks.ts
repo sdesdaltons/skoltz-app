@@ -10,7 +10,7 @@ import {
 
 import { adaptRawEvents, groupUIEventsByDate } from "./adapters"
 import { rawMockEvents } from "./mock/events"
-import { readEspnPostseasonEvents } from "./sources/espn"
+import { readEspnPostseasonEvents, readEspnTexansEvents } from "./sources/espn"
 import { readMlbAstrosEvents, readMlbPostseasonEvents } from "./sources/mlb"
 import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 
@@ -92,6 +92,7 @@ async function readSourceBackedSportsEvents(
     readMlbAstrosEvents(startDate, endDate),
     readMlbPostseasonEvents(startDate, endDate),
     readEspnPostseasonEvents(startDate, endDate),
+    readEspnTexansEvents(startDate, endDate),
   ])
 
   return results.flatMap((result) =>
@@ -114,7 +115,8 @@ function isPublicEvent(rawEvent: RawEvent) {
     rawEvent.id.startsWith("mlb-astros-") ||
     rawEvent.id.startsWith("mlb-postseason-") ||
     rawEvent.id.startsWith("espn-nba-postseason-") ||
-    rawEvent.id.startsWith("espn-nfl-postseason-")
+    rawEvent.id.startsWith("espn-nfl-postseason-") ||
+    rawEvent.id.startsWith("espn-texans-")
   const isSportsEvent = rawEvent.categories.some((category) =>
     ["astros", "rockets", "texans", "mlb", "nba", "nfl"].includes(category)
   )
@@ -125,8 +127,8 @@ function isPublicEvent(rawEvent: RawEvent) {
 
   return (
     !rawEvent.categories.includes("pool") &&
-    !rawEvent.categories.includes("rockets") &&
-    !rawEvent.categories.includes("texans") &&
+    (!rawEvent.categories.includes("rockets") || isSourceBackedSportsEvent) &&
+    (!rawEvent.categories.includes("texans") || isSourceBackedSportsEvent) &&
     (!isSportsEvent || isSourceBackedSportsEvent)
   )
 }

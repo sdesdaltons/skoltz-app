@@ -7,7 +7,7 @@ const footballDurationMs = 3.5 * 60 * 60 * 1000
 type EspnLeagueConfig = {
   sport: "basketball" | "football"
   league: "nba" | "nfl"
-  category: Extract<EventCategory, "nba" | "nfl">
+  category: Extract<EventCategory, "nba" | "nfl" | "texans">
   label: string
   durationMs: number
   playoffMonths: number[]
@@ -84,7 +84,7 @@ function overlapsPlayoffWindow(
 
 function mapEspnEventToRawEvent(
   event: EspnEvent,
-  config: EspnLeagueConfig
+  config: Pick<EspnLeagueConfig, "category" | "label" | "durationMs">
 ): RawEvent {
   const startTime = new Date(event.date)
   const endTime = new Date(startTime.getTime() + config.durationMs)
@@ -100,6 +100,18 @@ function mapEspnEventToRawEvent(
     categories: [config.category],
     location: competition?.venue?.fullName ?? `${config.label} game`,
   }
+}
+
+function buildTexansTitle(event: EspnEvent) {
+  const name = event.name ?? event.shortName ?? "Houston Texans game"
+
+  if (!name.includes("Houston Texans")) {
+    return name
+  }
+
+  return name.startsWith("Houston Texans")
+    ? name.replace("Houston Texans", "Texans")
+    : name.replace("Houston Texans", "Texans")
 }
 
 async function readEspnPostseasonLeagueEvents(
@@ -127,6 +139,10 @@ async function readEspnPostseasonLeagueEvents(
 
   return (data.events ?? [])
     .filter((event) => event.season?.type === postseasonType)
+    .filter(
+      (event) =>
+        config.category !== "nfl" || !event.name?.includes("Houston Texans")
+    )
     .map((event) => mapEspnEventToRawEvent(event, config))
 }
 
@@ -143,4 +159,35 @@ export async function readEspnPostseasonEvents(
   return results.flatMap((result) =>
     result.status === "fulfilled" ? result.value : []
   )
+}
+
+export async function readEspnTexansEvents(
+  startDate: Date,
+  endDate: Date
+): Promise<RawEvent[]> {
+  const params = new URLSearchParams({
+    dates: `${formatEspnDate(startDate)}-${formatEspnDate(endDate)}`,
+  })
+  const response = await fetch(
+    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?${params.toString()}`
+  )
+
+  if (!response.ok) {
+    throw new Error("Texans schedule request failed.")
+  }
+
+  const data = (await response.json()) as EspnScoreboardResponse
+
+  return (data.events ?? [])
+    .filter((event) => event.name?.includes("Houston Texans"))
+    .map((event) => ({
+      ...mapEspnEventToRawEvent(event, {
+        category: "texans",
+        label: "Texans",
+        durationMs: footballDurationMs,
+      }),
+      id: `espn-texans-${event.id}`,
+      title: buildTexansTitle(event),
+      description: "Texans game from ESPN's scoreboard feed.",
+    }))
 }

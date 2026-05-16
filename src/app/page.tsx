@@ -23,7 +23,6 @@ import {
   type UIEvent,
 } from "@/features/events";
 import { useAuth } from "@/features/auth/hooks";
-import { useRewards, type UIReward } from "@/features/rewards";
 import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
@@ -362,93 +361,6 @@ function CompactEventCard({
   );
 }
 
-function RewardsHowItWorks() {
-  const steps = [
-    ["1", "Check in", "Open rewards when you arrive at Skoltz."],
-    ["2", "Earn points", "Skoltz confirms eligible visits after check-in."],
-    ["3", "Use rewards", "View available rewards from your account."],
-  ];
-
-  return (
-    <div className="grid gap-2 sm:grid-cols-3">
-      {steps.map(([step, title, description]) => (
-        <div
-          key={step}
-          className="rounded-md border border-border/70 bg-surface-1 p-2.5"
-        >
-          <div className="flex items-start gap-2">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-sm border border-primary/40 bg-primary/15 text-xs font-semibold text-primary">
-              {step}
-            </span>
-            <div className="space-y-0.5">
-              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-              <p className="text-xs leading-5 text-muted-foreground">
-                {description}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function RewardProgress({
-  signedIn,
-  nextReward,
-}: {
-  signedIn: boolean;
-  nextReward?: UIReward;
-}) {
-  return (
-    <div className="space-y-2 rounded-md border border-border/70 bg-surface-1 p-2.5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase text-muted-foreground">
-          Reward progress
-        </p>
-        {nextReward ? (
-          <span className="text-xs font-semibold text-primary">
-            Next: {nextReward.pointsLabel}
-          </span>
-        ) : null}
-      </div>
-      <div className="h-2 overflow-hidden rounded-sm bg-surface-2">
-        <div
-          className="h-full rounded-sm bg-primary/70"
-          style={{ width: "0%" }}
-        />
-      </div>
-      <p className="text-xs leading-5 text-muted-foreground">
-        {signedIn
-          ? "Check in at Skoltz to start building toward available rewards."
-          : "Sign in before you check in so rewards progress can be tracked."}
-      </p>
-    </div>
-  );
-}
-
-function RewardExamples({ rewards }: { rewards: UIReward[] }) {
-  if (rewards.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-1">
-      {rewards.slice(0, 3).map((reward) => (
-        <div
-          key={reward.id}
-          className="min-w-48 rounded-md border border-border/70 bg-surface-1 p-2.5"
-        >
-          <SbBadge tone="success">{reward.pointsLabel}</SbBadge>
-          <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-foreground">
-            {reward.title}
-          </h3>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function getFocalStatusLabel(event: UIEvent, currentTime: Date) {
   if (isOngoingEvent(event, currentTime)) {
     return "Happening now";
@@ -608,7 +520,6 @@ export default function Home() {
     : "Current month";
   const upcomingQuery = useUpcomingEvents();
   const calendarQuery = useCalendarEvents(calendarMonth);
-  const rewardsQuery = useRewards();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -658,8 +569,6 @@ export default function Home() {
     )
   );
   const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
-  const rewardExamples = rewardsQuery.data ?? [];
-  const nextReward = rewardExamples[0];
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
@@ -708,8 +617,8 @@ export default function Home() {
               </div>
             </div>
 
-            <SbCard className="space-y-3 border-border/80 bg-surface-2 p-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <SbCard className="border-border/80 bg-surface-2 p-2.5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-sm font-semibold sm:text-base">
@@ -734,10 +643,6 @@ export default function Home() {
                   </SbButton>
                 ) : null}
               </div>
-
-              <RewardsHowItWorks />
-              <RewardProgress signedIn={isSignedIn} nextReward={nextReward} />
-              <RewardExamples rewards={rewardExamples} />
             </SbCard>
 
             <PwaInstallBanner />

@@ -29,6 +29,8 @@ import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
 
+type CalendarFilter = "sports" | "specials" | "featured";
+
 type PromoCard = {
   image: typeof tuesdaySpecialPromo;
   alt: string;
@@ -81,6 +83,26 @@ const karaokeStartMinute = 30;
 const karaokeEndHour = 1;
 const karaokeEndMinute = 30;
 const homepageUpcomingLimit = 10;
+
+const calendarFilters: Array<{ value: CalendarFilter; label: string }> = [
+  { value: "sports", label: "Sports" },
+  { value: "specials", label: "Specials" },
+  { value: "featured", label: "Featured Events" },
+];
+
+const sportsCalendarKinds = new Set<SbCalendarEvent["kind"]>([
+  "astros",
+  "rockets",
+  "texans",
+  "mlb",
+  "nba",
+  "nfl",
+]);
+
+const featuredCalendarKinds = new Set<SbCalendarEvent["kind"]>([
+  "astros",
+  "karaoke",
+]);
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -298,6 +320,47 @@ function mergeCalendarEvents(
         ...(promoCalendarItems[date] ?? []),
       ],
     ])
+  ) as Record<string, SbCalendarEvent[]>;
+}
+
+function calendarEventMatchesFilter(
+  event: SbCalendarEvent,
+  activeFilters: CalendarFilter[]
+) {
+  if (!activeFilters.length) {
+    return true;
+  }
+
+  return activeFilters.some((filter) => {
+    if (filter === "sports") {
+      return sportsCalendarKinds.has(event.kind);
+    }
+
+    if (filter === "specials") {
+      return event.kind === "special";
+    }
+
+    return featuredCalendarKinds.has(event.kind);
+  });
+}
+
+function filterCalendarEvents(
+  eventsByDate: Record<string, SbCalendarEvent[]>,
+  activeFilters: CalendarFilter[]
+) {
+  if (!activeFilters.length) {
+    return eventsByDate;
+  }
+
+  return Object.fromEntries(
+    Object.entries(eventsByDate)
+      .map(([date, events]) => [
+        date,
+        events.filter((event) =>
+          calendarEventMatchesFilter(event, activeFilters)
+        ),
+      ])
+      .filter(([, events]) => events.length > 0)
   ) as Record<string, SbCalendarEvent[]>;
 }
 
@@ -821,6 +884,9 @@ export default function Home() {
     useState<Date | null>(null);
   const [pendingCalendarDetailKey, setPendingCalendarDetailKey] =
     useState<string | null>(null);
+  const [activeCalendarFilters, setActiveCalendarFilters] = useState<
+    CalendarFilter[]
+  >([]);
   const today = currentDate ?? new Date();
   const currentCalendarMonth = new Date(
     today.getFullYear(),
@@ -903,6 +969,14 @@ export default function Home() {
     setPendingCalendarDetailKey(promoDateKey);
   }
 
+  function toggleCalendarFilter(filter: CalendarFilter) {
+    setActiveCalendarFilters((currentFilters) =>
+      currentFilters.includes(filter)
+        ? currentFilters.filter((currentFilter) => currentFilter !== filter)
+        : [...currentFilters, filter]
+    );
+  }
+
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
   const fridayKaraokeEvent = selectFridayKaraokeEvent(events, today);
@@ -945,6 +1019,10 @@ export default function Home() {
   const calendarEvents = mergeCalendarEvents(
     toCalendarEventsByDate(calendarQuery.data),
     getPromoCalendarEventsForMonth(promoCards, calendarMonth, today)
+  );
+  const filteredCalendarEvents = filterCalendarEvents(
+    calendarEvents,
+    activeCalendarFilters
   );
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
@@ -1252,10 +1330,40 @@ export default function Home() {
             />
 
             <SbCard className="p-2 sm:p-4">
-              <p className="px-2 pb-3 text-sm font-semibold text-muted-foreground sm:px-0">
-                Tap any day to see what&apos;s happening. Calendar view runs
-                through {calendarMonthLabelFormatter.format(maxCalendarMonth)}.
-              </p>
+              <div className="space-y-3 px-2 pb-3 sm:px-0">
+                <p className="text-sm font-semibold text-muted-foreground">
+                  Tap any day to see what&apos;s happening. Calendar view runs
+                  through {calendarMonthLabelFormatter.format(maxCalendarMonth)}.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {calendarFilters.map((filter) => {
+                    const isActive = activeCalendarFilters.includes(filter.value);
+
+                    return (
+                      <SbButton
+                        key={filter.value}
+                        type="button"
+                        size="sm"
+                        variant={isActive ? "primary" : "ghost"}
+                        aria-pressed={isActive}
+                        onClick={() => toggleCalendarFilter(filter.value)}
+                      >
+                        {filter.label}
+                      </SbButton>
+                    );
+                  })}
+                  {activeCalendarFilters.length ? (
+                    <SbButton
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setActiveCalendarFilters([])}
+                    >
+                      Clear
+                    </SbButton>
+                  ) : null}
+                </div>
+              </div>
               {calendarQuery.isLoading ? (
                 <div className="grid grid-cols-7 grid-rows-6 gap-1">
                   {Array.from({ length: 42 }, (_, index) => (
@@ -1269,7 +1377,7 @@ export default function Home() {
                 <SbCalendarGrid
                   month={calendarMonth}
                   today={today}
-                  eventsByDate={calendarEvents}
+                  eventsByDate={filteredCalendarEvents}
                 />
               )}
             </SbCard>

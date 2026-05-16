@@ -164,6 +164,10 @@ function getPromoSortDate(promo: PromoCard, currentDate: Date) {
   return scheduledDate;
 }
 
+function getPromoCalendarDate(promo: PromoCard, currentDate: Date) {
+  return getPromoSortDate(promo, currentDate);
+}
+
 function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
   return [...promos].sort(
     (firstPromo, secondPromo) =>
@@ -701,6 +705,21 @@ export default function Home() {
     });
   }
 
+  function openPromoOnCalendar(promo: PromoCard) {
+    const promoDate = getPromoCalendarDate(promo, today);
+
+    setSelectedCalendarMonth(
+      new Date(promoDate.getFullYear(), promoDate.getMonth(), 1)
+    );
+
+    window.requestAnimationFrame(() => {
+      document.getElementById("calendar")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
   const fridayKaraokeEvent = selectFridayKaraokeEvent(events, today);
@@ -983,15 +1002,22 @@ export default function Home() {
 
             <div className="flex gap-4 overflow-x-auto pb-2">
               {sortedPromoCards.map((promo) => (
-                <SbPromoCard
+                <button
                   key={promo.title}
-                  image={promo.image}
-                  alt={promo.alt}
-                  title={promo.title}
-                  subtitle={promo.subtitle}
-                  ctaText={promo.ctaText}
                   className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
-                />
+                  type="button"
+                  aria-label={`Open ${promo.title} on the calendar`}
+                  onClick={() => openPromoOnCalendar(promo)}
+                >
+                  <SbPromoCard
+                    image={promo.image}
+                    alt={promo.alt}
+                    title={promo.title}
+                    subtitle={promo.subtitle}
+                    ctaText={promo.ctaText}
+                    className="h-full text-left"
+                  />
+                </button>
               ))}
             </div>
           </SbContainer>

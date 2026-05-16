@@ -99,6 +99,20 @@ function isStartingSoonEvent(event: UIEvent, currentTime: Date) {
   return timeUntilStart >= 0 && timeUntilStart <= startingSoonWindowMs;
 }
 
+function isStartingSoonTonightEvent(event: UIEvent, currentTime: Date) {
+  return (
+    isStartingSoonEvent(event, currentTime) &&
+    dateKey(event.startTime) === dateKey(currentTime)
+  );
+}
+
+function isFutureTonightEvent(event: UIEvent, currentTime: Date) {
+  return (
+    isFutureEvent(event, currentTime) &&
+    eventOccursOnDate(event, dateKey(currentTime))
+  );
+}
+
 function sortEventsByStartTime(events: UIEvent[]) {
   return [...events].sort(
     (firstEvent, secondEvent) =>
@@ -115,26 +129,35 @@ function sortEventsByLifecyclePriority(events: UIEvent[]) {
   );
 }
 
-function selectUpcomingAstrosEvent(events: UIEvent[], currentTime: Date) {
-  const todayKey = dateKey(currentTime);
-  const sortedAstrosEvents = sortEventsByStartTime(
-    events.filter(
-      (event) => event.isAstros && isFutureEvent(event, currentTime)
-    )
+function sortEventsByFuturePriority(events: UIEvent[]) {
+  return [...events].sort(
+    (firstEvent, secondEvent) =>
+      firstEvent.startTime.getTime() - secondEvent.startTime.getTime() ||
+      companionPriority[firstEvent.primaryCategory] -
+        companionPriority[secondEvent.primaryCategory]
   );
-  const todayAstrosEvent = sortedAstrosEvents.find((event) =>
-    eventOccursOnDate(event, todayKey)
-  );
-
-  return todayAstrosEvent ?? sortedAstrosEvents[0];
 }
 
 function selectFocalEvent(events: UIEvent[], currentTime: Date) {
   const startingSoonEvents = sortEventsByLifecyclePriority(
-    events.filter((event) => isStartingSoonEvent(event, currentTime))
+    events.filter((event) => isStartingSoonTonightEvent(event, currentTime))
+  );
+  const ongoingEvents = sortEventsByLifecyclePriority(
+    events.filter((event) => isOngoingEvent(event, currentTime))
+  );
+  const futureTonightEvents = sortEventsByLifecyclePriority(
+    events.filter((event) => isFutureTonightEvent(event, currentTime))
+  );
+  const futureEvents = sortEventsByFuturePriority(
+    events.filter((event) => isFutureEvent(event, currentTime))
   );
 
-  return startingSoonEvents[0] ?? selectUpcomingAstrosEvent(events, currentTime);
+  return (
+    startingSoonEvents[0] ??
+    ongoingEvents[0] ??
+    futureTonightEvents[0] ??
+    futureEvents[0]
+  );
 }
 
 const sameDayLabelFormatter = new Intl.DateTimeFormat("en-US", {
@@ -189,7 +212,25 @@ function CompactEventCard({
   );
 }
 
-function FocalEventCard({ event }: { event: UIEvent }) {
+function getFocalStatusLabel(event: UIEvent, currentTime: Date) {
+  if (isOngoingEvent(event, currentTime)) {
+    return "Happening now";
+  }
+
+  if (isStartingSoonEvent(event, currentTime)) {
+    return "Starting soon";
+  }
+
+  return "Featured";
+}
+
+function FocalEventCard({
+  event,
+  currentTime,
+}: {
+  event: UIEvent;
+  currentTime: Date;
+}) {
   if (event.isAstros) {
     return (
       <SbAstrosHighlightCard
@@ -213,7 +254,7 @@ function FocalEventCard({ event }: { event: UIEvent }) {
             {category}
           </SbBadge>
         ))}
-        <SbBadge tone="blue">Starting soon</SbBadge>
+        <SbBadge tone="blue">{getFocalStatusLabel(event, currentTime)}</SbBadge>
       </div>
 
       <div className="space-y-2">
@@ -264,10 +305,13 @@ export default function Home() {
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
-  const ongoingEvents = sortEventsByStartTime(
-    events.filter((event) => isOngoingEvent(event, today))
-  );
   const focalEvent = selectFocalEvent(events, today);
+  const ongoingEvents = sortEventsByStartTime(
+    events.filter(
+      (event) =>
+        isOngoingEvent(event, today) && event.id !== focalEvent?.id
+    )
+  );
   const todayKey = dateKey(today);
   const todayLabel = sameDayLabelFormatter.format(today);
   const companionEvents = focalEvent
@@ -370,7 +414,7 @@ export default function Home() {
 
             {!isLoading && !isError && focalEvent ? (
               <div className="space-y-3">
-                <FocalEventCard event={focalEvent} />
+                <FocalEventCard event={focalEvent} currentTime={today} />
 
                 {companionEvents.length > 0 ? (
                   <SbCard className="space-y-2.5 border-primary/20 bg-surface-2 p-3">

@@ -22,6 +22,7 @@ import {
   useUpcomingEvents,
   type UIEvent,
 } from "@/features/events";
+import { useAuth } from "@/features/auth/hooks";
 import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
@@ -322,6 +323,7 @@ function toCalendarEventsByDate(
 }
 
 export default function Home() {
+  const { hydrated: authHydrated, loading: authLoading, user } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const today = currentDate ?? new Date();
   const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -382,6 +384,8 @@ export default function Home() {
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
   const isEmpty = !isLoading && !isError && events.length === 0;
+  const isAuthReady = authHydrated && !authLoading;
+  const isSignedIn = Boolean(user);
 
   function retryQueries() {
     void upcomingQuery.refetch();
@@ -413,15 +417,28 @@ export default function Home() {
             <SbCard className="flex flex-col gap-2 border-border/80 bg-surface-2 p-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <h2 className="text-sm font-semibold sm:text-base">
-                  Sign in to earn rewards & check in
+                  {!isAuthReady
+                    ? "Checking account status"
+                    : isSignedIn
+                      ? "You're signed in - rewards and check-ins are ready."
+                      : "Sign in to earn rewards & check in"}
                 </h2>
                 <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
-                  Rewards and venue check-ins are available after login.
+                  {isSignedIn
+                    ? "View your rewards and check in when you are at Skoltz."
+                    : "Rewards and venue check-ins are available after login."}
                 </p>
               </div>
-              <SbButton asChild href="/login" className="w-full sm:w-auto" size="sm">
-                Sign in
-              </SbButton>
+              {isAuthReady ? (
+                <SbButton
+                  asChild
+                  href={isSignedIn ? "/rewards" : "/login"}
+                  className="w-full sm:w-auto"
+                  size="sm"
+                >
+                  {isSignedIn ? "View rewards" : "Sign in"}
+                </SbButton>
+              ) : null}
             </SbCard>
 
             <PwaInstallBanner />

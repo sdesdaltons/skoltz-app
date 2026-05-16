@@ -7,6 +7,7 @@ export type SbEventKind =
   | "mlb"
   | "nba"
   | "nfl"
+  | "special"
   | "karaoke"
   | "pool"
 
@@ -17,6 +18,7 @@ const eventStyles: Partial<Record<SbEventKind, string>> = {
   mlb: "bg-primary/80",
   nba: "bg-destructive/80",
   nfl: "bg-success",
+  special: "bg-warning ring-1 ring-primary/60",
   karaoke: "bg-warning",
 }
 
@@ -27,6 +29,7 @@ const eventLabels: Partial<Record<SbEventKind, string>> = {
   mlb: "MLB Playoffs",
   nba: "NBA Playoffs",
   nfl: "NFL Playoffs",
+  special: "Special",
   karaoke: "Karaoke",
 }
 

@@ -171,6 +171,92 @@ function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
   );
 }
 
+function getPromoCalendarEventsForMonth(
+  promos: PromoCard[],
+  month: Date
+): Record<string, SbCalendarEvent[]> {
+  const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+  const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const promoEvents: Array<{ date: Date; event: SbCalendarEvent }> = [];
+
+  promos.forEach((promo) => {
+    if (promo.schedule.type === "weekly") {
+      const firstPromoDate = new Date(monthStart);
+      const daysUntilPromo =
+        (promo.schedule.day - firstPromoDate.getDay() + 7) % 7;
+
+      firstPromoDate.setDate(firstPromoDate.getDate() + daysUntilPromo);
+
+      for (
+        const promoDate = new Date(firstPromoDate);
+        promoDate <= monthEnd;
+        promoDate.setDate(promoDate.getDate() + 7)
+      ) {
+        promoEvents.push({
+          date: new Date(promoDate),
+          event: {
+            id: `promo-${promo.title}-${dateKey(promoDate)}`,
+            title: promo.title,
+            kind: "special",
+            time: promo.ctaText,
+          },
+        });
+      }
+
+      return;
+    }
+
+    const promoDate = new Date(
+      month.getFullYear(),
+      promo.schedule.month,
+      promo.schedule.day
+    );
+
+    if (promoDate.getMonth() === month.getMonth()) {
+      promoEvents.push({
+        date: promoDate,
+        event: {
+          id: `promo-${promo.title}-${dateKey(promoDate)}`,
+          title: promo.title,
+          kind: "special",
+          time: promo.ctaText,
+        },
+      });
+    }
+  });
+
+  return promoEvents.reduce<Record<string, SbCalendarEvent[]>>(
+    (groupedPromos, promo) => {
+      const key = dateKey(promo.date);
+
+      groupedPromos[key] = [...(groupedPromos[key] ?? []), promo.event];
+
+      return groupedPromos;
+    },
+    {}
+  );
+}
+
+function mergeCalendarEvents(
+  eventCalendarItems: Record<string, SbCalendarEvent[]>,
+  promoCalendarItems: Record<string, SbCalendarEvent[]>
+) {
+  const dates = new Set([
+    ...Object.keys(eventCalendarItems),
+    ...Object.keys(promoCalendarItems),
+  ]);
+
+  return Object.fromEntries(
+    [...dates].map((date) => [
+      date,
+      [
+        ...(eventCalendarItems[date] ?? []),
+        ...(promoCalendarItems[date] ?? []),
+      ],
+    ])
+  ) as Record<string, SbCalendarEvent[]>;
+}
+
 function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
   return (
     dateKey(event.startTime) === targetDateKey ||
@@ -651,8 +737,11 @@ export default function Home() {
         !ongoingEventIds.has(event.id)
     )
   );
-  const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
+  const calendarEvents = mergeCalendarEvents(
+    toCalendarEventsByDate(calendarQuery.data),
+    getPromoCalendarEventsForMonth(promoCards, calendarMonth)
+  );
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
   const isEmpty = !isLoading && !isError && events.length === 0;

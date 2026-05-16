@@ -3,7 +3,6 @@
 import { SbCalendarGrid, type SbCalendarEvent } from "@/components/calendar";
 import {
   SbAstrosHighlightCard,
-  SbEventCard,
   SbEventCardSkeleton,
 } from "@/components/events";
 import { OfflineBanner, SbEmptyState } from "@/components/feedback";
@@ -63,6 +62,8 @@ const companionPriority: Record<UIEvent["primaryCategory"], number> = {
   texans: 4,
 };
 
+const eventCategoryTone = companionCategoryTone;
+
 function dateKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -78,25 +79,38 @@ function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
   );
 }
 
-function selectFeaturedAstrosEvent(events: UIEvent[], today: Date) {
-  const todayKey = dateKey(today);
-  const astrosEvents = events
-    .filter((event) => event.isAstros)
-    .sort(
-      (firstEvent, secondEvent) =>
-        firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
-    );
-  const todayAstrosEvent = astrosEvents.find((event) =>
+function isOngoingEvent(event: UIEvent, currentTime: Date) {
+  const currentTimeValue = currentTime.getTime();
+
+  return (
+    currentTimeValue >= event.startTime.getTime() &&
+    currentTimeValue < event.endTime.getTime()
+  );
+}
+
+function isFutureEvent(event: UIEvent, currentTime: Date) {
+  return event.startTime.getTime() >= currentTime.getTime();
+}
+
+function sortEventsByStartTime(events: UIEvent[]) {
+  return [...events].sort(
+    (firstEvent, secondEvent) =>
+      firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
+  );
+}
+
+function selectFeaturedAstrosEvent(events: UIEvent[], currentTime: Date) {
+  const todayKey = dateKey(currentTime);
+  const sortedAstrosEvents = sortEventsByStartTime(
+    events.filter(
+      (event) => event.isAstros && isFutureEvent(event, currentTime)
+    )
+  );
+  const todayAstrosEvent = sortedAstrosEvents.find((event) =>
     eventOccursOnDate(event, todayKey)
   );
 
-  return (
-    todayAstrosEvent ??
-    astrosEvents.find(
-      (event) => event.startTime.getTime() >= today.getTime()
-    ) ??
-    astrosEvents[0]
-  );
+  return todayAstrosEvent ?? sortedAstrosEvents[0];
 }
 
 const sameDayLabelFormatter = new Intl.DateTimeFormat("en-US", {
@@ -109,6 +123,39 @@ const calendarMonthLabelFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",
 });
+
+function CompactEventCard({ event }: { event: UIEvent }) {
+  return (
+    <a
+      href="#calendar"
+      className="min-w-64 max-w-72 shrink-0 rounded-lg border border-border bg-card p-3 shadow-[var(--sb-shadow-sm)] transition hover:border-primary/50 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-w-72"
+    >
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {event.categories.map((category) => (
+            <SbBadge key={category} tone={eventCategoryTone[category]}>
+              {category}
+            </SbBadge>
+          ))}
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-muted-foreground">
+            {event.displayDate} - {event.displayTime}
+          </p>
+          <h3 className="line-clamp-2 text-base font-semibold leading-6 text-foreground">
+            {event.title}
+          </h3>
+          <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
+            {event.description}
+          </p>
+        </div>
+
+        <p className="text-sm font-semibold text-primary">View date</p>
+      </div>
+    </a>
+  );
+}
 
 function toCalendarEvent(event: UIEvent): SbCalendarEvent {
   return {
@@ -139,6 +186,9 @@ export default function Home() {
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
+  const ongoingEvents = sortEventsByStartTime(
+    events.filter((event) => isOngoingEvent(event, today))
+  );
   const featuredAstrosEvent = selectFeaturedAstrosEvent(events, today);
   const todayKey = dateKey(today);
   const todayLabel = sameDayLabelFormatter.format(today);
@@ -147,21 +197,27 @@ export default function Home() {
         .filter(
           (event) =>
             event.id !== featuredAstrosEvent.id &&
+            isFutureEvent(event, today) &&
             eventOccursOnDate(event, todayKey)
         )
         .sort(
           (firstEvent, secondEvent) =>
             companionPriority[firstEvent.primaryCategory] -
-            companionPriority[secondEvent.primaryCategory]
+              companionPriority[secondEvent.primaryCategory] ||
+            firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
         )
     : [];
+  const ongoingEventIds = new Set(ongoingEvents.map((event) => event.id));
   const companionEventIds = new Set(companionEvents.map((event) => event.id));
-  const upcomingEvents = featuredAstrosEvent
-    ? events.filter(
-        (event) =>
-          event.id !== featuredAstrosEvent.id && !companionEventIds.has(event.id)
-      )
-    : events;
+  const upcomingEvents = sortEventsByStartTime(
+    events.filter(
+      (event) =>
+        isFutureEvent(event, today) &&
+        event.id !== featuredAstrosEvent?.id &&
+        !companionEventIds.has(event.id) &&
+        !ongoingEventIds.has(event.id)
+    )
+  );
   const calendarEvents = toCalendarEventsByDate(calendarQuery.data);
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
@@ -304,6 +360,23 @@ export default function Home() {
           </SbContainer>
         </SbSection>
 
+        {!isLoading && !isError && ongoingEvents.length > 0 ? (
+          <SbSection className="py-6">
+            <SbContainer className="space-y-5">
+              <SbSectionHeader
+                title="Happening now"
+                subtitle="Events already underway at Skoltz."
+              />
+
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {ongoingEvents.map((event) => (
+                  <CompactEventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </SbContainer>
+          </SbSection>
+        ) : null}
+
         <SbSection className="py-8">
           <SbContainer className="space-y-5">
             <SbSectionHeader
@@ -340,7 +413,7 @@ export default function Home() {
             />
 
             {isLoading ? (
-              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="flex gap-3 overflow-hidden">
                 <SbEventCardSkeleton />
                 <SbEventCardSkeleton />
                 <SbEventCardSkeleton />
@@ -348,20 +421,9 @@ export default function Home() {
             ) : null}
 
             {!isLoading && !isError && upcomingEvents.length > 0 ? (
-              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {upcomingEvents.map((event) => (
-                  <SbEventCard
-                    key={event.id}
-                    title={event.title}
-                    description={event.description}
-                    dateTime={`${event.displayDate} - ${event.displayTime}`}
-                    categories={event.categories}
-                    cta={
-                      <SbButton asChild href="#calendar" variant="secondary" size="sm">
-                        View date
-                      </SbButton>
-                    }
-                  />
+                  <CompactEventCard key={event.id} event={event} />
                 ))}
               </div>
             ) : null}

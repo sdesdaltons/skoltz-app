@@ -532,6 +532,10 @@ function getHeroDescription({
     }
   }
 
+  if (isFridayNightWindow(currentTime)) {
+    return "Friday Karaoke takes over tonight at Skoltz. Cold drinks, songs, and specials are waiting.";
+  }
+
   return "Catch tonight's games, events, and specials before you get to the bar.";
 }
 

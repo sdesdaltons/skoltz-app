@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react";
+
 import { SbCalendarGrid, type SbCalendarEvent } from "@/components/calendar";
 import { SbLogo } from "@/components/branding";
 import {
@@ -320,11 +322,24 @@ function toCalendarEventsByDate(
 }
 
 export default function Home() {
-  const today = new Date();
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const today = currentDate ?? new Date();
   const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const calendarMonthLabel = calendarMonthLabelFormatter.format(calendarMonth);
+  const calendarMonthLabel = currentDate
+    ? calendarMonthLabelFormatter.format(calendarMonth)
+    : "Current month";
   const upcomingQuery = useUpcomingEvents();
   const calendarQuery = useCalendarEvents(calendarMonth);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setCurrentDate(new Date());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, []);
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;

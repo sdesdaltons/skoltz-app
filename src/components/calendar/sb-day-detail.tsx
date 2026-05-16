@@ -39,7 +39,7 @@ export function SbDayDetail({
                 })}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Static calendar preview
+                Calendar details
               </p>
             </div>
           </div>
@@ -68,7 +68,7 @@ export function SbDayDetail({
             ))
           ) : (
             <p className="rounded-md border border-border bg-surface-1 px-3 py-4 text-sm text-muted-foreground">
-              Nothing scheduled for this sample day.
+              Nothing scheduled for this day.
             </p>
           )}
         </div>

@@ -26,7 +26,7 @@ export function OfflineBanner() {
 
   return (
     <div className="sticky top-0 z-50 border-b border-warning/40 bg-surface-2 px-4 py-2 text-center text-sm font-semibold text-warning">
-      You are offline. Showing the latest local preview state.
+      You are offline. Showing the latest available state.
     </div>
   )
 }

@@ -74,6 +74,10 @@ const promoCards = [
 
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
 const tonightWindowEndHour = 4;
+const karaokeStartHour = 21;
+const karaokeStartMinute = 30;
+const karaokeEndHour = 1;
+const karaokeEndMinute = 30;
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -180,6 +184,20 @@ function isFriday(date: Date) {
 
 function isFridayNightWindow(date: Date) {
   return isFriday(date) || (date.getDay() === 6 && date.getHours() < 4);
+}
+
+function isScheduledKaraokeActive(date: Date) {
+  const day = date.getDay();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const minutesAfterMidnight = hours * 60 + minutes;
+  const karaokeStartMinutes = karaokeStartHour * 60 + karaokeStartMinute;
+  const karaokeEndMinutes = karaokeEndHour * 60 + karaokeEndMinute;
+
+  return (
+    (day === 5 && minutesAfterMidnight >= karaokeStartMinutes) ||
+    (day === 6 && minutesAfterMidnight < karaokeEndMinutes)
+  );
 }
 
 function isKaraokeEvent(event: UIEvent) {
@@ -496,6 +514,13 @@ function getHeroDescription({
   fridayKaraokeEvent?: UIEvent;
   currentTime: Date;
 }) {
+  if (
+    isScheduledKaraokeActive(currentTime) &&
+    (!fridayKaraokeEvent || isOngoingEvent(fridayKaraokeEvent, currentTime))
+  ) {
+    return "Friday Karaoke is happening now at Skoltz until 1:30 AM.";
+  }
+
   if (fridayKaraokeEvent) {
     const karaokeStart = eventStartTimeFormatter.format(
       fridayKaraokeEvent.startTime

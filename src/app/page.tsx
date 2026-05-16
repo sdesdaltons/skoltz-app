@@ -61,19 +61,41 @@ export default function Home() {
   return (
     <>
       <OfflineBanner />
-      <main id="home" className="flex-1 pb-24 md:pb-0">
+      <main id="home" className="flex-1 pb-28">
         <SbSection className="py-8 sm:py-12">
           <SbContainer className="space-y-6">
-            <div className="space-y-3">
-              <SbBadge tone="blue">Skoltz</SbBadge>
-              <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
-                Tonight at Skoltz
-              </h1>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                Static event composition preview for the calendar, venue
-                programming, and mobile navigation layer.
-              </p>
+            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-3">
+                <SbBadge tone="blue">Skoltz</SbBadge>
+                <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+                  Tonight at Skoltz
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                  Catch tonight&apos;s games, events, and specials before you get
+                  to the bar.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <SbButton asChild href="/login">
+                  Sign In
+                </SbButton>
+                <SbButton asChild href="/rewards" variant="secondary">
+                  Rewards
+                </SbButton>
+              </div>
             </div>
+
+            <SbCard className="flex flex-col gap-3 bg-surface-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">Rewards and check-ins</h2>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Sign in to view rewards and check in when you are at Skoltz.
+                </p>
+              </div>
+              <SbButton asChild href="/login" variant="ghost">
+                Account Login
+              </SbButton>
+            </SbCard>
 
             {isLoading ? (
               <SbEventCardSkeleton className="min-h-72 border-primary/40 bg-primary/10 shadow-[var(--sb-glow-blue)]" />
@@ -87,8 +109,8 @@ export default function Home() {
                     Events did not load
                   </h2>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    The mock query failed. Retry to request the local mock data
-                    again.
+                    We could not load the latest Skoltz events. Try again in a
+                    moment.
                   </p>
                 </div>
                 <SbButton type="button" variant="secondary" onClick={retryQueries}>
@@ -100,7 +122,7 @@ export default function Home() {
             {isEmpty ? (
               <SbEmptyState
                 title="No events yet"
-                description="The mock query returned no adapted events for this preview."
+                description="There are no scheduled events on the calendar right now."
               />
             ) : null}
 
@@ -109,11 +131,11 @@ export default function Home() {
                 title={featuredAstrosEvent.title}
                 description={featuredAstrosEvent.description}
                 dateTime={`${featuredAstrosEvent.displayDate} - ${featuredAstrosEvent.displayTime}`}
-                cta={
-                  <SbButton type="button" className="w-full sm:w-auto">
-                    Add to plan
-                  </SbButton>
-                }
+                  cta={
+                    <SbButton asChild className="w-full sm:w-auto" href="#calendar">
+                      View on calendar
+                    </SbButton>
+                  }
               />
             ) : null}
           </SbContainer>
@@ -123,10 +145,10 @@ export default function Home() {
           <SbContainer className="space-y-5">
             <SbSectionHeader
               title="Upcoming events"
-              subtitle="Reusable cards composed from adapted mock query data."
+              subtitle="Plan your next visit around games, karaoke, pool, and bar events."
               action={
-                <SbButton type="button" variant="ghost" size="sm">
-                  View all
+                <SbButton asChild href="#calendar" variant="ghost" size="sm">
+                  Open calendar
                 </SbButton>
               }
             />
@@ -149,8 +171,8 @@ export default function Home() {
                     dateTime={`${event.displayDate} - ${event.displayTime}`}
                     categories={event.categories}
                     cta={
-                      <SbButton type="button" variant="secondary" size="sm">
-                        Details
+                      <SbButton asChild href="#calendar" variant="secondary" size="sm">
+                        View date
                       </SbButton>
                     }
                   />
@@ -163,8 +185,8 @@ export default function Home() {
         <SbSection id="calendar" className="bg-surface-1/40 py-8 sm:py-12">
           <SbContainer className="space-y-5">
             <SbSectionHeader
-              title="Calendar preview"
-              subtitle="Mock month grid from adapted calendar query data."
+              title="Event calendar"
+              subtitle="Browse upcoming nights at Skoltz by date."
               action={
                 <p className="text-sm font-semibold text-muted-foreground">
                   May 2026
@@ -173,6 +195,9 @@ export default function Home() {
             />
 
             <SbCard className="p-2 sm:p-4">
+              <p className="px-2 pb-3 text-sm font-semibold text-muted-foreground sm:px-0">
+                Tap any day to see what&apos;s happening.
+              </p>
               {calendarQuery.isLoading ? (
                 <div className="grid grid-cols-7 grid-rows-6 gap-1">
                   {Array.from({ length: 42 }, (_, index) => (

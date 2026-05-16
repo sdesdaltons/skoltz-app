@@ -3,14 +3,13 @@ import { cn } from "@/lib/utils"
 type NavItem = {
   label: string
   href: string
-  icon: "home" | "calendar" | "rewards" | "pool" | "account"
+  icon: "home" | "calendar" | "rewards" | "account"
 }
 
 const navItems: NavItem[] = [
   { label: "Home", href: "/", icon: "home" },
   { label: "Calendar", href: "/#calendar", icon: "calendar" },
   { label: "Rewards", href: "/rewards", icon: "rewards" },
-  { label: "Pool", href: "#pool", icon: "pool" },
   { label: "Account", href: "/account", icon: "account" },
 ]
 
@@ -54,16 +53,6 @@ function NavIcon({ icon }: { icon: NavItem["icon"] }) {
     )
   }
 
-  if (icon === "pool") {
-    return (
-      <svg {...commonProps}>
-        <circle cx="12" cy="12" r="7" />
-        <circle cx="12" cy="12" r="2" />
-        <path d="M5 19 19 5" />
-      </svg>
-    )
-  }
-
   return (
     <svg {...commonProps}>
       <circle cx="12" cy="8" r="4" />
@@ -83,11 +72,11 @@ export function SbBottomNav({
     <nav
       aria-label="Primary"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-1/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[var(--sb-shadow-lg)] backdrop-blur md:hidden",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-1/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[var(--sb-shadow-lg)] backdrop-blur",
         className
       )}
     >
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+      <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1">
         {navItems.map((item) => {
           const isActive = item.label === active
 

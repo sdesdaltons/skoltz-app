@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react"
+import { type AnchorHTMLAttributes, type ButtonHTMLAttributes } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -31,15 +31,29 @@ const sbButtonVariants = cva(
 )
 
 export function SbButton({
+  asChild,
   className,
   variant,
   size,
   ...props
-}: ComponentProps<"button"> & VariantProps<typeof sbButtonVariants>) {
+}: (
+  | (ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: false })
+  | (AnchorHTMLAttributes<HTMLAnchorElement> & { asChild: true })
+) &
+  VariantProps<typeof sbButtonVariants>) {
+  if (asChild) {
+    return (
+      <a
+        className={cn(sbButtonVariants({ variant, size, className }))}
+        {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}
+      />
+    )
+  }
+
   return (
     <button
       className={cn(sbButtonVariants({ variant, size, className }))}
-      {...props}
+      {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}
     />
   )
 }

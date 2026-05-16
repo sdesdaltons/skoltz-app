@@ -33,7 +33,7 @@ export function SbCalendarDay({
       className={cn(
         "relative flex aspect-square min-h-12 w-full flex-col justify-between rounded-md border bg-surface-1 p-1.5 text-left transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        "hover:bg-surface-2",
+        "cursor-pointer hover:border-primary/40 hover:bg-surface-2",
         isCurrentMonth
           ? "border-border text-foreground"
           : "border-border/60 text-muted-foreground opacity-55",

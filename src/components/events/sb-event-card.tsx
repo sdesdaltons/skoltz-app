@@ -34,7 +34,7 @@ export function SbEventCard({
   return (
     <SbCard
       className={cn(
-        "space-y-4",
+        "space-y-4 transition-colors hover:border-primary/50 hover:bg-surface-2",
         isAstros && "border-primary/50 bg-primary/10 shadow-[var(--sb-glow-blue)]",
         className
       )}

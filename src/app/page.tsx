@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { SbAlertList, type SbInAppAlert } from "@/components/alerts";
 import { SbCalendarGrid, type SbCalendarEvent } from "@/components/calendar";
 import { SbLogo } from "@/components/branding";
 import {
@@ -733,6 +734,86 @@ function getHeroDescription({
   return "Catch tonight's games, events, and specials before you get to the bar.";
 }
 
+function buildInAppAlerts({
+  focalEvent,
+  fridayKaraokeEvent,
+  isSignedIn,
+  currentTime,
+}: {
+  focalEvent?: UIEvent;
+  fridayKaraokeEvent?: UIEvent;
+  isSignedIn: boolean;
+  currentTime: Date;
+}) {
+  const alerts: SbInAppAlert[] = [];
+
+  if (isScheduledKaraokeActive(currentTime)) {
+    alerts.push({
+      id: "karaoke-live",
+      title: "Karaoke is live now",
+      description: "Friday Karaoke is happening at Skoltz until 1:30 AM.",
+      tone: "warning",
+      actionHref: "#calendar",
+      actionLabel: "View tonight",
+    });
+  } else if (
+    fridayKaraokeEvent &&
+    isStartingSoonEvent(fridayKaraokeEvent, currentTime)
+  ) {
+    alerts.push({
+      id: "karaoke-starting-soon",
+      title: "Karaoke starts soon",
+      description: `Friday Karaoke starts at ${eventStartTimeFormatter.format(
+        fridayKaraokeEvent.startTime
+      )}.`,
+      tone: "warning",
+      actionHref: "#calendar",
+      actionLabel: "View tonight",
+    });
+  }
+
+  if (
+    focalEvent &&
+    !isKaraokeEvent(focalEvent) &&
+    isSameNightEvent(focalEvent, currentTime)
+  ) {
+    if (isOngoingEvent(focalEvent, currentTime)) {
+      alerts.push({
+        id: `event-live-${focalEvent.id}`,
+        title: `${focalEvent.title} is happening now`,
+        description: "Tap through to see the event on tonight's calendar.",
+        tone: focalEvent.isAstros ? "blue" : "neutral",
+        actionHref: "#calendar",
+        actionLabel: "Open calendar",
+      });
+    } else if (isStartingSoonEvent(focalEvent, currentTime)) {
+      alerts.push({
+        id: `event-starting-${focalEvent.id}`,
+        title: `${focalEvent.title} starts soon`,
+        description: `Starts at ${eventStartTimeFormatter.format(
+          focalEvent.startTime
+        )} tonight.`,
+        tone: focalEvent.isAstros ? "blue" : "neutral",
+        actionHref: "#calendar",
+        actionLabel: "Open calendar",
+      });
+    }
+  }
+
+  if (isSignedIn) {
+    alerts.push({
+      id: "rewards-check-in",
+      title: "Check in when you arrive",
+      description: "Eligible, server-verified check-ins earn 10 points.",
+      tone: "success",
+      actionHref: "/rewards",
+      actionLabel: "Rewards",
+    });
+  }
+
+  return alerts.slice(0, 3);
+}
+
 export default function Home() {
   const { hydrated: authHydrated, loading: authLoading, session } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -885,6 +966,15 @@ export default function Home() {
     fridayKaraokeEvent,
     currentTime: today,
   });
+  const inAppAlerts =
+    isAuthReady && !isLoading && !isError
+      ? buildInAppAlerts({
+          focalEvent,
+          fridayKaraokeEvent,
+          isSignedIn,
+          currentTime: today,
+        })
+      : [];
 
   function retryQueries() {
     void upcomingQuery.refetch();
@@ -941,6 +1031,7 @@ export default function Home() {
             </SbCard>
 
             <PwaInstallBanner />
+            <SbAlertList alerts={inAppAlerts} />
 
             {isLoading ? (
               <SbEventCardSkeleton className="min-h-72 border-primary/40 bg-primary/10 shadow-[var(--sb-glow-blue)]" />

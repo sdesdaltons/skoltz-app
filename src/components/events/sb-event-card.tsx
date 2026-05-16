@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils"
 
 import { type SbEventKind } from "@/components/calendar"
 
-const categoryTone: Record<SbEventKind, "blue" | "red" | "success" | "warning"> =
-  {
-    astros: "blue",
-    rockets: "red",
-    texans: "blue",
-    karaoke: "warning",
-    pool: "success",
-  }
+const categoryTone: Partial<
+  Record<SbEventKind, "blue" | "red" | "success" | "warning" | "neutral">
+> = {
+  astros: "blue",
+  rockets: "red",
+  texans: "blue",
+  karaoke: "warning",
+}
 
 export function SbEventCard({
   title,
@@ -41,7 +41,7 @@ export function SbEventCard({
     >
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
-          <SbBadge key={category} tone={categoryTone[category]}>
+          <SbBadge key={category} tone={categoryTone[category] ?? "neutral"}>
             {category}
           </SbBadge>
         ))}

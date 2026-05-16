@@ -76,6 +76,10 @@ function readEvents(): Promise<RawEvent[]> {
   return hasSupabaseConfig() ? readSupabaseEvents() : readMockEvents()
 }
 
+function isPublicEvent(rawEvent: RawEvent) {
+  return !rawEvent.categories.includes("pool")
+}
+
 function monthKey(month: Date) {
   const year = month.getFullYear()
   const monthValue = String(month.getMonth() + 1).padStart(2, "0")
@@ -95,7 +99,7 @@ export function useUpcomingEvents() {
     queryKey: queryKeys.events.upcoming,
     queryFn: async () => {
       const rawEvents = await readEvents()
-      const events = adaptRawEvents(rawEvents)
+      const events = adaptRawEvents(rawEvents.filter(isPublicEvent))
 
       return events.sort(
         (firstEvent, secondEvent) =>
@@ -112,7 +116,7 @@ export function useCalendarEvents(month: Date) {
     queryKey: queryKeys.events.calendar(monthKey(month)),
     queryFn: async () => {
       const rawEvents = await readEvents()
-      const events = adaptRawEvents(rawEvents).filter((event) =>
+      const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter((event) =>
         isInMonth(event, month)
       )
 

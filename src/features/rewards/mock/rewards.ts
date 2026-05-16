@@ -9,13 +9,6 @@ export const rawMockRewards: RawReward[] = [
     isActive: true,
   },
   {
-    id: "reward-pool-hour",
-    title: "Pool table hour",
-    description: "A future reward option for regulars.",
-    pointsRequired: 150,
-    isActive: true,
-  },
-  {
     id: "reward-game-day-special",
     title: "Game day special",
     description: "Placeholder reward surfaced without redemption logic.",

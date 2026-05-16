@@ -62,13 +62,19 @@ function readRewards(): Promise<RawReward[]> {
   return hasSupabaseConfig() ? readSupabaseRewards() : readMockRewards()
 }
 
+function isPublicReward(rawReward: RawReward) {
+  return !rawReward.title.toLowerCase().includes("pool")
+}
+
 export function useRewards() {
   return useQuery({
     queryKey: queryKeys.rewards.all,
     queryFn: async () => {
       const rawRewards = await readRewards()
 
-      return adaptRawRewards(rawRewards).filter((reward) => reward.isActive)
+      return adaptRawRewards(rawRewards.filter(isPublicReward)).filter(
+        (reward) => reward.isActive
+      )
     },
     staleTime: rewardStaleTime,
     refetchInterval: false,

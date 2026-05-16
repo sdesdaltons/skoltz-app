@@ -10,7 +10,7 @@ const categoryLabels: Record<EventCategory, string> = {
   rockets: "Rockets",
   texans: "Texans",
   karaoke: "Karaoke",
-  pool: "Pool",
+  pool: "Event",
 }
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {

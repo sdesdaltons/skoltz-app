@@ -48,27 +48,45 @@ const promoCards = [
   },
 ];
 
-const companionCategoryTone: Record<
-  UIEvent["primaryCategory"],
-  "blue" | "red" | "success" | "warning"
-> = {
-  astros: "blue",
-  rockets: "red",
-  texans: "blue",
-  karaoke: "warning",
-  pool: "success",
-};
-
-const companionPriority: Record<UIEvent["primaryCategory"], number> = {
-  karaoke: 0,
-  pool: 1,
-  rockets: 2,
-  texans: 3,
-  astros: 4,
-};
-
-const eventCategoryTone = companionCategoryTone;
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
+
+function eventCategoryTone(
+  category: UIEvent["primaryCategory"]
+): "blue" | "red" | "success" | "warning" | "neutral" {
+  if (category === "astros" || category === "texans") {
+    return "blue";
+  }
+
+  if (category === "rockets") {
+    return "red";
+  }
+
+  if (category === "karaoke") {
+    return "warning";
+  }
+
+  return "neutral";
+}
+
+function categoryPriority(category: UIEvent["primaryCategory"]) {
+  if (category === "karaoke") {
+    return 0;
+  }
+
+  if (category === "rockets") {
+    return 1;
+  }
+
+  if (category === "texans") {
+    return 2;
+  }
+
+  if (category === "astros") {
+    return 3;
+  }
+
+  return 4;
+}
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -128,8 +146,8 @@ function sortEventsByStartTime(events: UIEvent[]) {
 function sortEventsByLifecyclePriority(events: UIEvent[]) {
   return [...events].sort(
     (firstEvent, secondEvent) =>
-      companionPriority[firstEvent.primaryCategory] -
-        companionPriority[secondEvent.primaryCategory] ||
+      categoryPriority(firstEvent.primaryCategory) -
+        categoryPriority(secondEvent.primaryCategory) ||
       firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
   );
 }
@@ -138,8 +156,8 @@ function sortEventsByFuturePriority(events: UIEvent[]) {
   return [...events].sort(
     (firstEvent, secondEvent) =>
       firstEvent.startTime.getTime() - secondEvent.startTime.getTime() ||
-      companionPriority[firstEvent.primaryCategory] -
-        companionPriority[secondEvent.primaryCategory]
+      categoryPriority(firstEvent.primaryCategory) -
+        categoryPriority(secondEvent.primaryCategory)
   );
 }
 
@@ -191,7 +209,7 @@ function CompactEventCard({
       <div className="space-y-1.5">
         <div className="flex flex-wrap gap-1.5">
           {event.categories.map((category) => (
-            <SbBadge key={category} tone={eventCategoryTone[category]}>
+            <SbBadge key={category} tone={eventCategoryTone(category)}>
               {category}
             </SbBadge>
           ))}
@@ -255,7 +273,7 @@ function FocalEventCard({
     <SbCard className="space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)]">
       <div className="flex flex-wrap gap-1.5">
         {event.categories.map((category) => (
-          <SbBadge key={category} tone={eventCategoryTone[category]}>
+          <SbBadge key={category} tone={eventCategoryTone(category)}>
             {category}
           </SbBadge>
         ))}
@@ -329,8 +347,8 @@ export default function Home() {
         )
         .sort(
           (firstEvent, secondEvent) =>
-            companionPriority[firstEvent.primaryCategory] -
-              companionPriority[secondEvent.primaryCategory] ||
+            categoryPriority(firstEvent.primaryCategory) -
+              categoryPriority(secondEvent.primaryCategory) ||
             firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
         )
     : [];
@@ -452,7 +470,7 @@ export default function Home() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
                               <SbBadge
-                                tone={companionCategoryTone[event.primaryCategory]}
+                                tone={eventCategoryTone(event.primaryCategory)}
                               >
                                 {event.primaryCategory}
                               </SbBadge>
@@ -502,7 +520,7 @@ export default function Home() {
           <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Upcoming events"
-              subtitle="Plan your next visit around games, karaoke, pool, and bar events."
+              subtitle="Plan your next visit around games, karaoke, and bar events."
               action={
                 <SbButton asChild href="#calendar" variant="ghost" size="sm">
                   Open calendar

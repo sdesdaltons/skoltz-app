@@ -489,6 +489,7 @@ function sortEventsByFuturePriority(events: UIEvent[]) {
 }
 
 function selectFocalEvent(events: UIEvent[], currentTime: Date) {
+  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const startingSoonEvents = sortEventsByLifecyclePriority(
     events.filter(
       (event) =>
@@ -502,7 +503,6 @@ function selectFocalEvent(events: UIEvent[], currentTime: Date) {
         isOngoingEvent(event, currentTime) && isSameNightEvent(event, currentTime)
     )
   );
-  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const futureTonightEvents = sortEventsByLifecyclePriority(
     events.filter(
       (event) =>
@@ -515,9 +515,9 @@ function selectFocalEvent(events: UIEvent[], currentTime: Date) {
   );
 
   return (
-    ongoingEvents[0] ??
     startingSoonEvents[0] ??
     fridayKaraokeEvent ??
+    ongoingEvents[0] ??
     futureTonightEvents[0] ??
     futureEvents[0]
   );
@@ -687,7 +687,13 @@ function FocalEventCard({
   }
 
   return (
-    <SbCard className="space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)]">
+    <SbCard
+      className={
+        isFridayKaraoke
+          ? "space-y-3 border-warning/45 bg-warning/10 p-4 shadow-[0_0_0_1px_rgb(249_168_37_/_0.14),0_0_18px_rgb(249_168_37_/_0.12)]"
+          : "space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.12),0_0_16px_rgb(30_77_255_/_0.1)]"
+      }
+    >
       <div className="flex flex-wrap gap-1.5">
         <EventLogoStrip logoUrls={event.logoUrls} size="md" />
         {event.categoryInfo.map((category) => (
@@ -696,7 +702,10 @@ function FocalEventCard({
           </SbBadge>
         ))}
         {isFridayKaraoke ? (
-          <SbBadge tone="warning">Friday feature</SbBadge>
+          <>
+            <SbBadge tone="warning">Friday feature</SbBadge>
+            <SbBadge tone="warning">Live karaoke</SbBadge>
+          </>
         ) : null}
         <SbBadge tone="blue">{getFocalStatusLabel(event, currentTime)}</SbBadge>
       </div>
@@ -1041,12 +1050,12 @@ export default function Home() {
   const rewardsCtaTitle = !isAuthReady
     ? "Checking account status"
     : isSignedIn
-      ? "You're signed in - rewards and check-ins are ready."
+      ? "Rewards ready - check in at Skoltz tonight"
       : "Sign in to earn rewards & check in";
   const rewardsCtaDescription = !isAuthReady
     ? "Confirming your rewards and check-in access."
     : isSignedIn
-      ? "Check in when you arrive and keep an eye on available rewards."
+      ? "Eligible check-ins earn 10 points."
       : "Rewards and venue check-ins are available after login.";
   const heroDescription = getHeroDescription({
     focalEvent,

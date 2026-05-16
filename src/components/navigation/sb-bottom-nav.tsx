@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
 function NavIcon({ icon }: { icon: NavItem["icon"] }) {
   const commonProps = {
     "aria-hidden": true,
-    className: "size-5",
+    className: "size-4",
     fill: "none",
     stroke: "currentColor",
     strokeLinecap: "round" as const,
@@ -141,7 +141,7 @@ export function SbBottomNav({
     <nav
       aria-label="Primary"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-1/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[var(--sb-shadow-lg)] backdrop-blur",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-1/95 px-2 pt-1.5 pb-[calc(env(safe-area-inset-bottom)+0.375rem)] shadow-[var(--sb-shadow-lg)] backdrop-blur",
         className
       )}
     >
@@ -154,8 +154,8 @@ export function SbBottomNav({
               key={item.label}
               href={item.href}
               className={cn(
-                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-1 text-[0.6875rem] font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                isActive && "bg-primary/15 text-primary"
+                "flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[0.625rem] font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isActive && "bg-primary/10 text-primary"
               )}
               aria-current={isActive ? "page" : undefined}
             >

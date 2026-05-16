@@ -23,7 +23,7 @@ export function SbAstrosHighlightCard({
   return (
     <SbCard
       className={cn(
-        "space-y-5 border-primary/60 bg-primary/10 p-5 shadow-[var(--sb-glow-blue)] sm:p-6",
+        "space-y-4 border-primary/35 bg-primary/8 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)] sm:p-5",
         className
       )}
     >
@@ -32,12 +32,12 @@ export function SbAstrosHighlightCard({
         <SbBadge tone="neutral">Featured</SbBadge>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         <p className="text-sm font-semibold text-muted-foreground">{dateTime}</p>
-        <h2 className="text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
+        <h2 className="text-2xl font-semibold tracking-normal text-foreground sm:text-4xl">
           {title}
         </h2>
-        <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
           {description}
         </p>
       </div>
@@ -46,7 +46,7 @@ export function SbAstrosHighlightCard({
         {specials.map((special) => (
           <div
             key={special}
-            className="rounded-md border border-primary/35 bg-surface-1 px-3 py-3 text-sm font-semibold text-foreground"
+            className="rounded-md border border-primary/20 bg-surface-1 px-3 py-2 text-sm font-semibold text-foreground"
           >
             {special}
           </div>

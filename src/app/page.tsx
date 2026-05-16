@@ -57,12 +57,13 @@ const companionCategoryTone: Record<
 const companionPriority: Record<UIEvent["primaryCategory"], number> = {
   karaoke: 0,
   pool: 1,
-  astros: 2,
-  rockets: 3,
-  texans: 4,
+  rockets: 2,
+  texans: 3,
+  astros: 4,
 };
 
 const eventCategoryTone = companionCategoryTone;
+const startingSoonWindowMs = 2 * 60 * 60 * 1000;
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -92,6 +93,12 @@ function isFutureEvent(event: UIEvent, currentTime: Date) {
   return event.startTime.getTime() >= currentTime.getTime();
 }
 
+function isStartingSoonEvent(event: UIEvent, currentTime: Date) {
+  const timeUntilStart = event.startTime.getTime() - currentTime.getTime();
+
+  return timeUntilStart >= 0 && timeUntilStart <= startingSoonWindowMs;
+}
+
 function sortEventsByStartTime(events: UIEvent[]) {
   return [...events].sort(
     (firstEvent, secondEvent) =>
@@ -99,7 +106,16 @@ function sortEventsByStartTime(events: UIEvent[]) {
   );
 }
 
-function selectFeaturedAstrosEvent(events: UIEvent[], currentTime: Date) {
+function sortEventsByLifecyclePriority(events: UIEvent[]) {
+  return [...events].sort(
+    (firstEvent, secondEvent) =>
+      companionPriority[firstEvent.primaryCategory] -
+        companionPriority[secondEvent.primaryCategory] ||
+      firstEvent.startTime.getTime() - secondEvent.startTime.getTime()
+  );
+}
+
+function selectUpcomingAstrosEvent(events: UIEvent[], currentTime: Date) {
   const todayKey = dateKey(currentTime);
   const sortedAstrosEvents = sortEventsByStartTime(
     events.filter(
@@ -113,6 +129,14 @@ function selectFeaturedAstrosEvent(events: UIEvent[], currentTime: Date) {
   return todayAstrosEvent ?? sortedAstrosEvents[0];
 }
 
+function selectFocalEvent(events: UIEvent[], currentTime: Date) {
+  const startingSoonEvents = sortEventsByLifecyclePriority(
+    events.filter((event) => isStartingSoonEvent(event, currentTime))
+  );
+
+  return startingSoonEvents[0] ?? selectUpcomingAstrosEvent(events, currentTime);
+}
+
 const sameDayLabelFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
   month: "short",
@@ -124,14 +148,20 @@ const calendarMonthLabelFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-function CompactEventCard({ event }: { event: UIEvent }) {
+function CompactEventCard({
+  event,
+  showAstrosSpecials = false,
+}: {
+  event: UIEvent;
+  showAstrosSpecials?: boolean;
+}) {
   return (
     <a
       href="#calendar"
-      className="min-w-64 max-w-72 shrink-0 rounded-lg border border-border bg-card p-3 shadow-[var(--sb-shadow-sm)] transition hover:border-primary/50 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-w-72"
+      className="min-w-52 max-w-60 shrink-0 rounded-md border border-border/70 bg-card p-2.5 shadow-[var(--sb-shadow-sm)] transition hover:border-primary/30 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-w-60"
     >
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {event.categories.map((category) => (
             <SbBadge key={category} tone={eventCategoryTone[category]}>
               {category}
@@ -143,17 +173,65 @@ function CompactEventCard({ event }: { event: UIEvent }) {
           <p className="text-sm font-semibold text-muted-foreground">
             {event.displayDate} - {event.displayTime}
           </p>
-          <h3 className="line-clamp-2 text-base font-semibold leading-6 text-foreground">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
             {event.title}
           </h3>
-          <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
-            {event.description}
-          </p>
+          {showAstrosSpecials && event.isAstros ? (
+            <p className="text-xs font-semibold text-muted-foreground">
+              $2 Hot Dogs / $2 Ziegenbock Pints
+            </p>
+          ) : null}
         </div>
 
-        <p className="text-sm font-semibold text-primary">View date</p>
+        <p className="text-xs font-semibold text-primary">View date</p>
       </div>
     </a>
+  );
+}
+
+function FocalEventCard({ event }: { event: UIEvent }) {
+  if (event.isAstros) {
+    return (
+      <SbAstrosHighlightCard
+        title={event.title}
+        description={event.description}
+        dateTime={`${event.displayDate} - ${event.displayTime}`}
+        cta={
+          <SbButton asChild className="w-full sm:w-auto" href="#calendar">
+            View on calendar
+          </SbButton>
+        }
+      />
+    );
+  }
+
+  return (
+    <SbCard className="space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.14),0_0_20px_rgb(30_77_255_/_0.12)]">
+      <div className="flex flex-wrap gap-1.5">
+        {event.categories.map((category) => (
+          <SbBadge key={category} tone={eventCategoryTone[category]}>
+            {category}
+          </SbBadge>
+        ))}
+        <SbBadge tone="blue">Starting soon</SbBadge>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-muted-foreground">
+          {event.displayDate} - {event.displayTime}
+        </p>
+        <h2 className="text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
+          {event.title}
+        </h2>
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+          {event.description}
+        </p>
+      </div>
+
+      <SbButton asChild className="w-full sm:w-auto" href="#calendar">
+        View on calendar
+      </SbButton>
+    </SbCard>
   );
 }
 
@@ -189,14 +267,14 @@ export default function Home() {
   const ongoingEvents = sortEventsByStartTime(
     events.filter((event) => isOngoingEvent(event, today))
   );
-  const featuredAstrosEvent = selectFeaturedAstrosEvent(events, today);
+  const focalEvent = selectFocalEvent(events, today);
   const todayKey = dateKey(today);
   const todayLabel = sameDayLabelFormatter.format(today);
-  const companionEvents = featuredAstrosEvent
+  const companionEvents = focalEvent
     ? events
         .filter(
           (event) =>
-            event.id !== featuredAstrosEvent.id &&
+            event.id !== focalEvent.id &&
             isFutureEvent(event, today) &&
             eventOccursOnDate(event, todayKey)
         )
@@ -213,7 +291,7 @@ export default function Home() {
     events.filter(
       (event) =>
         isFutureEvent(event, today) &&
-        event.id !== featuredAstrosEvent?.id &&
+        event.id !== focalEvent?.id &&
         !companionEventIds.has(event.id) &&
         !ongoingEventIds.has(event.id)
     )
@@ -232,12 +310,12 @@ export default function Home() {
     <>
       <OfflineBanner />
       <main id="home" className="flex-1 pb-28">
-        <SbSection className="py-8 sm:py-12">
-          <SbContainer className="space-y-6">
+        <SbSection className="py-5 sm:py-7">
+          <SbContainer className="space-y-4">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <SbBadge tone="blue">Skoltz</SbBadge>
-                <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+                <h1 className="text-3xl font-semibold tracking-normal text-foreground sm:text-5xl">
                   Tonight at Skoltz
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground">
@@ -247,16 +325,16 @@ export default function Home() {
               </div>
             </div>
 
-            <SbCard className="flex flex-col gap-3 border-primary/30 bg-surface-2 sm:flex-row sm:items-center sm:justify-between">
+            <SbCard className="flex flex-col gap-2 border-border/80 bg-surface-2 p-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-sm font-semibold sm:text-base">
                   Sign in to earn rewards & check in
                 </h2>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
                   Rewards and venue check-ins are available after login.
                 </p>
               </div>
-              <SbButton asChild href="/login" className="w-full sm:w-auto">
+              <SbButton asChild href="/login" className="w-full sm:w-auto" size="sm">
                 Sign in
               </SbButton>
             </SbCard>
@@ -290,28 +368,19 @@ export default function Home() {
               />
             ) : null}
 
-            {!isLoading && !isError && featuredAstrosEvent ? (
-              <div className="space-y-4">
-                <SbAstrosHighlightCard
-                  title={featuredAstrosEvent.title}
-                  description={featuredAstrosEvent.description}
-                  dateTime={`${featuredAstrosEvent.displayDate} - ${featuredAstrosEvent.displayTime}`}
-                  cta={
-                    <SbButton asChild className="w-full sm:w-auto" href="#calendar">
-                      View on calendar
-                    </SbButton>
-                  }
-                />
+            {!isLoading && !isError && focalEvent ? (
+              <div className="space-y-3">
+                <FocalEventCard event={focalEvent} />
 
                 {companionEvents.length > 0 ? (
-                  <SbCard className="space-y-3 border-primary/30 bg-surface-2">
+                  <SbCard className="space-y-2.5 border-primary/20 bg-surface-2 p-3">
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <p className="text-xs font-semibold uppercase text-primary">
                           Also tonight
                         </p>
                         <h2 className="text-xl font-semibold">
-                          More happening with the game
+                          More happening tonight
                         </h2>
                       </div>
                       <p className="text-sm font-semibold text-muted-foreground">
@@ -319,12 +388,12 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-2">
                       {companionEvents.map((event) => (
                         <a
                           key={event.id}
                           href="#calendar"
-                          className="rounded-md border border-border bg-surface-1 p-3 transition hover:border-primary/50 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          className="rounded-md border border-border/70 bg-surface-1 p-2.5 transition hover:border-primary/30 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
@@ -355,8 +424,8 @@ export default function Home() {
         </SbSection>
 
         {!isLoading && !isError && ongoingEvents.length > 0 ? (
-          <SbSection className="py-6">
-            <SbContainer className="space-y-5">
+          <SbSection className="py-4">
+            <SbContainer className="space-y-3">
               <SbSectionHeader
                 title="Happening now"
                 subtitle="Events already underway at Skoltz."
@@ -364,15 +433,19 @@ export default function Home() {
 
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {ongoingEvents.map((event) => (
-                  <CompactEventCard key={event.id} event={event} />
+                  <CompactEventCard
+                    key={event.id}
+                    event={event}
+                    showAstrosSpecials
+                  />
                 ))}
               </div>
             </SbContainer>
           </SbSection>
         ) : null}
 
-        <SbSection className="py-8">
-          <SbContainer className="space-y-5">
+        <SbSection className="py-5">
+          <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Upcoming events"
               subtitle="Plan your next visit around games, karaoke, pool, and bar events."
@@ -401,8 +474,8 @@ export default function Home() {
           </SbContainer>
         </SbSection>
 
-        <SbSection className="py-8">
-          <SbContainer className="space-y-5">
+        <SbSection className="py-5">
+          <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Featured specials"
               subtitle="Food, drinks, and venue promos happening around the bar."
@@ -424,8 +497,8 @@ export default function Home() {
           </SbContainer>
         </SbSection>
 
-        <SbSection id="calendar" className="bg-surface-1/40 py-8 sm:py-12">
-          <SbContainer className="space-y-5">
+        <SbSection id="calendar" className="bg-surface-1/40 py-5 sm:py-8">
+          <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Event calendar"
               subtitle="Browse upcoming nights at Skoltz by date."

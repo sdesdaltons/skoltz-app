@@ -701,6 +701,8 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedCalendarMonth, setSelectedCalendarMonth] =
     useState<Date | null>(null);
+  const [pendingCalendarDetailKey, setPendingCalendarDetailKey] =
+    useState<string | null>(null);
   const today = currentDate ?? new Date();
   const currentCalendarMonth = new Date(
     today.getFullYear(),
@@ -726,6 +728,33 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!pendingCalendarDetailKey || calendarQuery.isLoading) {
+      return;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const detailElement = document.getElementById(
+        `day-detail-${pendingCalendarDetailKey}`
+      ) as HTMLElement | null;
+
+      document.getElementById("calendar")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      if (detailElement && "showPopover" in detailElement) {
+        detailElement.showPopover();
+      }
+
+      setPendingCalendarDetailKey(null);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, [calendarQuery.isLoading, pendingCalendarDetailKey]);
+
   function showPreviousCalendarMonth() {
     setSelectedCalendarMonth((currentMonth) => {
       const nextMonth = addMonths(currentMonth ?? currentCalendarMonth, -1);
@@ -748,17 +777,12 @@ export default function Home() {
 
   function openPromoOnCalendar(promo: PromoCard) {
     const promoDate = getPromoCalendarDate(promo, today);
+    const promoDateKey = dateKey(promoDate);
 
     setSelectedCalendarMonth(
       new Date(promoDate.getFullYear(), promoDate.getMonth(), 1)
     );
-
-    window.requestAnimationFrame(() => {
-      document.getElementById("calendar")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+    setPendingCalendarDetailKey(promoDateKey);
   }
 
   const queryEvents = upcomingQuery.data ?? [];

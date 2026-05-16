@@ -307,6 +307,27 @@ const calendarMonthLabelFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
+function addMonths(date: Date, months: number) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+function compareMonth(firstDate: Date, secondDate: Date) {
+  return (
+    firstDate.getFullYear() * 12 +
+    firstDate.getMonth() -
+    (secondDate.getFullYear() * 12 + secondDate.getMonth())
+  );
+}
+
+function getSuperBowlCoverageMonth(currentDate: Date) {
+  const coverageYear =
+    currentDate.getMonth() <= 1
+      ? currentDate.getFullYear()
+      : currentDate.getFullYear() + 1;
+
+  return new Date(coverageYear, 1, 1);
+}
+
 function CompactEventCard({
   event,
   currentTime,
@@ -513,11 +534,20 @@ function getHeroDescription({
 export default function Home() {
   const { hydrated: authHydrated, loading: authLoading, session } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [selectedCalendarMonth, setSelectedCalendarMonth] =
+    useState<Date | null>(null);
   const today = currentDate ?? new Date();
-  const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const calendarMonthLabel = currentDate
-    ? calendarMonthLabelFormatter.format(calendarMonth)
-    : "Current month";
+  const currentCalendarMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  );
+  const calendarMonth = selectedCalendarMonth ?? currentCalendarMonth;
+  const maxCalendarMonth = getSuperBowlCoverageMonth(today);
+  const canShowPreviousMonth =
+    compareMonth(calendarMonth, currentCalendarMonth) > 0;
+  const canShowNextMonth = compareMonth(calendarMonth, maxCalendarMonth) < 0;
+  const calendarMonthLabel = calendarMonthLabelFormatter.format(calendarMonth);
   const upcomingQuery = useUpcomingEvents();
   const calendarQuery = useCalendarEvents(calendarMonth);
 
@@ -530,6 +560,26 @@ export default function Home() {
       window.clearTimeout(timeout);
     };
   }, []);
+
+  function showPreviousCalendarMonth() {
+    setSelectedCalendarMonth((currentMonth) => {
+      const nextMonth = addMonths(currentMonth ?? currentCalendarMonth, -1);
+
+      return compareMonth(nextMonth, currentCalendarMonth) < 0
+        ? currentCalendarMonth
+        : nextMonth;
+    });
+  }
+
+  function showNextCalendarMonth() {
+    setSelectedCalendarMonth((currentMonth) => {
+      const nextMonth = addMonths(currentMonth ?? currentCalendarMonth, 1);
+
+      return compareMonth(nextMonth, maxCalendarMonth) > 0
+        ? maxCalendarMonth
+        : nextMonth;
+    });
+  }
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
@@ -814,17 +864,40 @@ export default function Home() {
           <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Event calendar"
-              subtitle="Browse upcoming nights at Skoltz by date."
+              subtitle="Browse upcoming nights at Skoltz through football season."
               action={
-                <p className="text-sm font-semibold text-muted-foreground">
-                  {calendarMonthLabel}
-                </p>
+                <div className="flex items-center gap-2">
+                  <SbButton
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={!canShowPreviousMonth}
+                    aria-label="Show previous month"
+                    onClick={showPreviousCalendarMonth}
+                  >
+                    Prev
+                  </SbButton>
+                  <p className="min-w-28 text-center text-sm font-semibold text-muted-foreground">
+                    {calendarMonthLabel}
+                  </p>
+                  <SbButton
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={!canShowNextMonth}
+                    aria-label="Show next month"
+                    onClick={showNextCalendarMonth}
+                  >
+                    Next
+                  </SbButton>
+                </div>
               }
             />
 
             <SbCard className="p-2 sm:p-4">
               <p className="px-2 pb-3 text-sm font-semibold text-muted-foreground sm:px-0">
-                Tap any day to see what&apos;s happening.
+                Tap any day to see what&apos;s happening. Calendar view runs
+                through {calendarMonthLabelFormatter.format(maxCalendarMonth)}.
               </p>
               {calendarQuery.isLoading ? (
                 <div className="grid grid-cols-7 grid-rows-6 gap-1">

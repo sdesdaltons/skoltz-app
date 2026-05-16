@@ -170,16 +170,53 @@ function getPromoCalendarDate(promo: PromoCard, currentDate: Date) {
 }
 
 function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
-  return [...promos].sort(
+  return promos.filter((promo) => isPromoActive(promo, currentDate)).sort(
     (firstPromo, secondPromo) =>
       getPromoSortDate(firstPromo, currentDate).getTime() -
       getPromoSortDate(secondPromo, currentDate).getTime()
   );
 }
 
+function isPromoActive(promo: PromoCard, currentDate: Date) {
+  if (promo.schedule.type === "weekly") {
+    return true;
+  }
+
+  const todayStart = startOfDay(currentDate);
+  const promoDate = new Date(
+    currentDate.getFullYear(),
+    promo.schedule.month,
+    promo.schedule.day
+  );
+  const promoEnd = new Date(promoDate);
+
+  promoEnd.setDate(promoDate.getDate() + 1);
+
+  return promoEnd > todayStart;
+}
+
+function isOneTimePromoVisibleOnCalendar(
+  promo: PromoCard,
+  month: Date,
+  currentDate: Date
+) {
+  if (promo.schedule.type === "weekly") {
+    return false;
+  }
+
+  const promoDate = new Date(
+    currentDate.getFullYear(),
+    promo.schedule.month,
+    promo.schedule.day
+  );
+
+  return promoDate.getMonth() === month.getMonth() && isPromoActive(promo, currentDate);
+}
+
 function getPromoCalendarEventsForMonth(
   promos: PromoCard[],
-  month: Date
+  month: Date,
+  currentDate: Date
 ): Record<string, SbCalendarEvent[]> {
   const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
   const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
@@ -213,12 +250,12 @@ function getPromoCalendarEventsForMonth(
     }
 
     const promoDate = new Date(
-      month.getFullYear(),
+      currentDate.getFullYear(),
       promo.schedule.month,
       promo.schedule.day
     );
 
-    if (promoDate.getMonth() === month.getMonth()) {
+    if (isOneTimePromoVisibleOnCalendar(promo, month, currentDate)) {
       promoEvents.push({
         date: promoDate,
         event: {
@@ -826,7 +863,7 @@ export default function Home() {
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
   const calendarEvents = mergeCalendarEvents(
     toCalendarEventsByDate(calendarQuery.data),
-    getPromoCalendarEventsForMonth(promoCards, calendarMonth)
+    getPromoCalendarEventsForMonth(promoCards, calendarMonth, today)
   );
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;

@@ -8,11 +8,4 @@ export const rawMockRewards: RawReward[] = [
     pointsRequired: 100,
     isActive: true,
   },
-  {
-    id: "reward-game-day-special",
-    title: "Game day special",
-    description: "Placeholder reward surfaced without redemption logic.",
-    pointsRequired: 200,
-    isActive: true,
-  },
 ]

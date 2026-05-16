@@ -10,8 +10,8 @@ import { type UIReward, useRewards } from "@/features/rewards"
 function RewardsHowItWorks() {
   const steps = [
     ["1", "Check in", "Use this page when you arrive at Skoltz."],
-    ["2", "Earn points", "Skoltz confirms eligible visits after check-in."],
-    ["3", "Use rewards", "Available rewards stay visible in this catalogue."],
+    ["2", "Server verifies", "Location and cooldown rules decide whether the visit is eligible."],
+    ["3", "Track rewards", "Reward cards show the point targets Skoltz makes available."],
   ]
 
   return (
@@ -32,6 +32,48 @@ function RewardsHowItWorks() {
         </SbCard>
       ))}
     </div>
+  )
+}
+
+function PointsExplanationCard() {
+  return (
+    <SbCard className="space-y-3 bg-surface-2">
+      <div className="space-y-2">
+        <SbBadge tone="blue">Points</SbBadge>
+        <h2 className="text-xl font-semibold">How points are calculated</h2>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Points are based on eligible in-person check-ins. The app sends a
+          location-gated check-in request, then Skoltz verifies it on the server.
+          Only one check-in can count within a 12-hour window.
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <div className="rounded-md border border-border bg-surface-1 p-3">
+          <p className="text-sm font-semibold text-foreground">
+            1 eligible visit
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Starts with a verified check-in at Skoltz.
+          </p>
+        </div>
+        <div className="rounded-md border border-border bg-surface-1 p-3">
+          <p className="text-sm font-semibold text-foreground">
+            12-hour cooldown
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Repeat taps do not create extra eligible visits.
+          </p>
+        </div>
+        <div className="rounded-md border border-border bg-surface-1 p-3">
+          <p className="text-sm font-semibold text-foreground">
+            Server controlled
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            The browser never awards or edits points.
+          </p>
+        </div>
+      </div>
+    </SbCard>
   )
 }
 
@@ -80,6 +122,7 @@ export default function RewardsPage() {
             />
 
             <RewardsHowItWorks />
+            <PointsExplanationCard />
 
             <SbCard className="space-y-4 bg-surface-2">
               <div className="space-y-2">

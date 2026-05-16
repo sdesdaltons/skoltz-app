@@ -63,7 +63,13 @@ function readRewards(): Promise<RawReward[]> {
 }
 
 function isPublicReward(rawReward: RawReward) {
-  return !rawReward.title.toLowerCase().includes("pool")
+  const rewardTitle = rawReward.title.toLowerCase()
+
+  return (
+    !rewardTitle.includes("pool") &&
+    !rewardTitle.includes("game day special") &&
+    !rewardTitle.includes("gameday special")
+  )
 }
 
 export function useRewards() {

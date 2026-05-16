@@ -75,7 +75,9 @@ where
   );
 
 delete from public.rewards
-where title ilike '%pool%';
+where
+  title ilike '%pool%'
+  or lower(title) in ('game day special', 'gameday special');
 
 with schedule as (
   select
@@ -147,19 +149,4 @@ select
   true
 where not exists (
   select 1 from public.rewards where title = 'Free appetizer'
-);
-
-insert into public.rewards (
-  title,
-  description,
-  points_required,
-  is_active
-)
-select
-  'Game day special',
-  'Starter reward surfaced without redemption logic.',
-  200,
-  true
-where not exists (
-  select 1 from public.rewards where title = 'Game day special'
 );

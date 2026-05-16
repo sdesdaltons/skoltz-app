@@ -55,8 +55,9 @@ const promoCards = [
     image: crawfishPromo,
     alt: "Skoltz crawfish special graphic",
     title: "Crawfish night",
-    subtitle: "Seasonal food special with cold drinks and loud vibes.",
-    details: "Crawfish special with cold drinks.",
+    subtitle: "3 lbs crawfish for $20 with drink specials.",
+    details:
+      "3 lbs crawfish for $20. Drink specials: $2.75 aluminum bottles, $1 off seltzers, and $5 tea shots.",
     ctaText: "Sat May 16",
     schedule: { type: "date", month: 4, day: 16 },
   },
@@ -73,8 +74,9 @@ const promoCards = [
     image: dartTournamentPromo,
     alt: "Skoltz dart tournament graphic",
     title: "Dart tournament",
-    subtitle: "Blind draw partners, added prize money, and signups on site.",
-    details: "Blind draw partners, added prize money, and signups on site.",
+    subtitle: "$1000 added with $15 entry and blind draw partners.",
+    details:
+      "$1000 added. $15 entry. 3:30 PM sign up, 4 PM darts fly. Blind draw partners, OIMO / Cricket / 701 TB.",
     ctaText: "Mon May 25",
     schedule: { type: "date", month: 4, day: 25 },
   },

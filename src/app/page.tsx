@@ -78,6 +78,7 @@ const karaokeStartHour = 21;
 const karaokeStartMinute = 30;
 const karaokeEndHour = 1;
 const karaokeEndMinute = 30;
+const homepageUpcomingLimit = 10;
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -737,6 +738,7 @@ export default function Home() {
         !ongoingEventIds.has(event.id)
     )
   );
+  const visibleUpcomingEvents = upcomingEvents.slice(0, homepageUpcomingLimit);
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
   const calendarEvents = mergeCalendarEvents(
     toCalendarEventsByDate(calendarQuery.data),
@@ -929,7 +931,7 @@ export default function Home() {
           <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Upcoming events"
-              subtitle="Plan your next visit around games, karaoke, and bar events."
+              subtitle="The next few games, karaoke nights, and venue events."
               action={
                 <SbButton asChild href="#calendar" variant="ghost" size="sm">
                   Open calendar
@@ -945,9 +947,9 @@ export default function Home() {
               </div>
             ) : null}
 
-            {!isLoading && !isError && upcomingEvents.length > 0 ? (
+            {!isLoading && !isError && visibleUpcomingEvents.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto pb-2">
-                {upcomingEvents.map((event) => (
+                {visibleUpcomingEvents.map((event) => (
                   <CompactEventCard
                     key={event.id}
                     event={event}
@@ -955,6 +957,19 @@ export default function Home() {
                   />
                 ))}
               </div>
+            ) : null}
+
+            {!isLoading && !isError && visibleUpcomingEvents.length === 0 ? (
+              <SbCard className="border-border/70 bg-surface-2 p-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-semibold text-muted-foreground">
+                    No additional upcoming events beyond what is already shown.
+                  </p>
+                  <SbButton asChild href="#calendar" variant="ghost" size="sm">
+                    View calendar
+                  </SbButton>
+                </div>
+              </SbCard>
             ) : null}
           </SbContainer>
         </SbSection>

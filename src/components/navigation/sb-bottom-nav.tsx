@@ -1,3 +1,8 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
+
 import { cn } from "@/lib/utils"
 
 type NavItem = {
@@ -68,6 +73,44 @@ export function SbBottomNav({
   active?: NavItem["label"]
   className?: string
 }) {
+  const pathname = usePathname()
+  const [effectiveActive, setEffectiveActive] = useState<NavItem["label"]>(
+    active
+  )
+
+  useEffect(() => {
+    function resolveActiveItem(): NavItem["label"] {
+      if (window.location.hash === "#calendar" || pathname === "/calendar") {
+        return "Calendar"
+      }
+
+      if (pathname === "/rewards") {
+        return "Rewards"
+      }
+
+      if (pathname === "/account" || pathname === "/login") {
+        return "Account"
+      }
+
+      if (pathname === "/") {
+        return "Home"
+      }
+
+      return active
+    }
+
+    function updateActiveItem() {
+      setEffectiveActive(resolveActiveItem())
+    }
+
+    updateActiveItem()
+    window.addEventListener("hashchange", updateActiveItem)
+
+    return () => {
+      window.removeEventListener("hashchange", updateActiveItem)
+    }
+  }, [active, pathname])
+
   return (
     <nav
       aria-label="Primary"
@@ -78,7 +121,7 @@ export function SbBottomNav({
     >
       <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1">
         {navItems.map((item) => {
-          const isActive = item.label === active
+          const isActive = item.label === effectiveActive
 
           return (
             <a

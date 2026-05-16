@@ -245,25 +245,19 @@ export default function Home() {
                   to the bar.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <SbButton asChild href="/login">
-                  Sign In
-                </SbButton>
-                <SbButton asChild href="/rewards" variant="secondary">
-                  Rewards
-                </SbButton>
-              </div>
             </div>
 
-            <SbCard className="flex flex-col gap-3 bg-surface-2 sm:flex-row sm:items-center sm:justify-between">
+            <SbCard className="flex flex-col gap-3 border-primary/30 bg-surface-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold">Rewards and check-ins</h2>
+                <h2 className="text-xl font-semibold">
+                  Sign in to earn rewards & check in
+                </h2>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Sign in to view rewards and check in when you are at Skoltz.
+                  Rewards and venue check-ins are available after login.
                 </p>
               </div>
-              <SbButton asChild href="/login" variant="ghost">
-                Account Login
+              <SbButton asChild href="/login" className="w-full sm:w-auto">
+                Sign in
               </SbButton>
             </SbCard>
 
@@ -380,29 +374,6 @@ export default function Home() {
         <SbSection className="py-8">
           <SbContainer className="space-y-5">
             <SbSectionHeader
-              title="Featured specials"
-              subtitle="Food, drinks, and venue promos happening around the bar."
-            />
-
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {promoCards.map((promo) => (
-                <SbPromoCard
-                  key={promo.title}
-                  image={promo.image}
-                  alt={promo.alt}
-                  title={promo.title}
-                  subtitle={promo.subtitle}
-                  ctaText={promo.ctaText}
-                  className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
-                />
-              ))}
-            </div>
-          </SbContainer>
-        </SbSection>
-
-        <SbSection className="py-8">
-          <SbContainer className="space-y-5">
-            <SbSectionHeader
               title="Upcoming events"
               subtitle="Plan your next visit around games, karaoke, pool, and bar events."
               action={
@@ -427,6 +398,29 @@ export default function Home() {
                 ))}
               </div>
             ) : null}
+          </SbContainer>
+        </SbSection>
+
+        <SbSection className="py-8">
+          <SbContainer className="space-y-5">
+            <SbSectionHeader
+              title="Featured specials"
+              subtitle="Food, drinks, and venue promos happening around the bar."
+            />
+
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {promoCards.map((promo) => (
+                <SbPromoCard
+                  key={promo.title}
+                  image={promo.image}
+                  alt={promo.alt}
+                  title={promo.title}
+                  subtitle={promo.subtitle}
+                  ctaText={promo.ctaText}
+                  className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
+                />
+              ))}
+            </div>
           </SbContainer>
         </SbSection>
 

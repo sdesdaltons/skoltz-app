@@ -1,11 +1,13 @@
 -- Skoltz starter seed data.
 -- Run after supabase_schema.sql.
--- Event dates are generated relative to the execution date so the demo calendar
+-- Event dates are generated relative to the execution date so the calendar
 -- stays current without cron jobs, schedulers, or external sports feeds.
 
 delete from public.events
 where
   categories && array['pool']::text[]
+  or categories && array['rockets']::text[]
+  or categories && array['texans']::text[]
   or title in (
     'Karaoke kickoff night',
     'Karaoke late night',
@@ -41,7 +43,9 @@ where
   );
 
 delete from public.sports_games
-where title in (
+where
+  category in ('rockets', 'texans')
+  or title in (
   'Astros watch party opener',
   'Astros vs Rangers',
   'Rockets vs Spurs',
@@ -59,7 +63,7 @@ where title in (
   'Astros Sunday baseball',
   'Rockets watch party',
   'Texans fan night'
-);
+  );
 
 delete from public.rewards
 where title ilike '%pool%';
@@ -68,7 +72,6 @@ with schedule as (
   select
     current_date as today,
     current_date + 1 as tomorrow,
-    current_date + 4 as early_week,
     current_date + (((5 - extract(dow from current_date)::int + 7) % 7))::int as next_friday,
     case
       when extract(dow from current_date)::int = 6 then current_date + 7
@@ -98,16 +101,6 @@ seed as (
         schedule.tomorrow,
         time '22:30',
         array['astros']::text[],
-        'Skoltz main bar'
-      ),
-      (
-        'Rockets watch party',
-        'Rockets game on the big screens.',
-        schedule.early_week,
-        time '18:30',
-        schedule.early_week,
-        time '21:30',
-        array['rockets']::text[],
         'Skoltz main bar'
       ),
       (
@@ -149,16 +142,6 @@ seed as (
         time '16:30',
         array['astros']::text[],
         'Skoltz main bar'
-      ),
-      (
-        'Texans fan night',
-        'Texans fans gather for football talk and specials.',
-        schedule.next_friday + 5,
-        time '19:00',
-        schedule.next_friday + 5,
-        time '21:30',
-        array['texans']::text[],
-        'Back patio'
       ),
       (
         'Astros road game watch',
@@ -215,7 +198,6 @@ where not exists (
 with schedule as (
   select
     current_date + 1 as tomorrow,
-    current_date + 4 as early_week,
     current_date + (((5 - extract(dow from current_date)::int + 7) % 7))::int as next_friday,
     case
       when extract(dow from current_date)::int = 6 then current_date + 7
@@ -238,11 +220,9 @@ seed as (
   cross join lateral (
     values
       ('Astros watch party opener', 'MLB', 'Astros', 'Rangers', schedule.tomorrow, time '19:10', 'astros'),
-      ('Rockets watch party', 'NBA', 'Rockets', 'TBD', schedule.early_week, time '18:30', 'rockets'),
       ('Astros Friday watch party', 'MLB', 'Astros', 'Mariners', schedule.next_friday, time '19:10', 'astros'),
       ('Astros weekend watch party', 'MLB', 'Astros', 'Angels', schedule.upcoming_saturday, time '18:40', 'astros'),
       ('Astros Sunday baseball', 'MLB', 'Astros', 'Tigers', schedule.upcoming_sunday, time '13:10', 'astros'),
-      ('Texans fan night', 'NFL', 'Texans', 'TBD', schedule.next_friday + 5, time '19:00', 'texans'),
       ('Astros road game watch', 'MLB', 'Rays', 'Astros', schedule.next_friday + 7, time '18:40', 'astros'),
       ('Astros homestand night', 'MLB', 'Astros', 'Athletics', schedule.next_friday + 11, time '19:10', 'astros')
   ) as v(title, league, home_team, away_team, start_date, start_time, category)

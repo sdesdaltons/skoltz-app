@@ -20,22 +20,4 @@ export const rawMockEvents: RawEvent[] = [
     categories: ["karaoke"],
     location: "Skoltz stage",
   },
-  {
-    id: "evt-2026-05-10-rockets",
-    title: "Rockets watch party",
-    description: "A compact event card for game-day programming.",
-    startTime: "2026-05-10T18:30:00-05:00",
-    endTime: "2026-05-10T21:30:00-05:00",
-    categories: ["rockets"],
-    location: "Skoltz main bar",
-  },
-  {
-    id: "evt-2026-05-21-texans",
-    title: "Texans fan meetup",
-    description: "Texans fans gather for offseason talk and specials.",
-    startTime: "2026-05-21T19:00:00-05:00",
-    endTime: "2026-05-21T21:00:00-05:00",
-    categories: ["texans"],
-    location: "Back patio",
-  },
 ]

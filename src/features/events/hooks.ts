@@ -77,7 +77,11 @@ function readEvents(): Promise<RawEvent[]> {
 }
 
 function isPublicEvent(rawEvent: RawEvent) {
-  return !rawEvent.categories.includes("pool")
+  return (
+    !rawEvent.categories.includes("pool") &&
+    !rawEvent.categories.includes("rockets") &&
+    !rawEvent.categories.includes("texans")
+  )
 }
 
 function monthKey(month: Date) {

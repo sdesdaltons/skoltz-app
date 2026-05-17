@@ -1,4 +1,9 @@
+"use client"
+
+import { useState } from "react"
+
 import { SbBadge, SbCard } from "@/components/ui"
+import { cn } from "@/lib/utils"
 
 type FoodMenuItem = {
   name: string
@@ -10,6 +15,30 @@ type FoodMenuSection = {
   title: string
   items: FoodMenuItem[]
 }
+
+type WingSauce = {
+  name: string
+  style: string
+  tone: "red" | "warning" | "success" | "neutral"
+}
+
+const wingSauces = [
+  { name: "3 Pepper Fire", style: "Hot", tone: "red" },
+  { name: "Cajun Heat", style: "Hot", tone: "red" },
+  { name: "Flaming Honey", style: "Sweet Heat", tone: "warning" },
+  { name: "Garlic", style: "Savory", tone: "neutral" },
+  { name: "Franks Hot", style: "Classic Hot", tone: "red" },
+  { name: "Skoltz Hot", style: "House Hot", tone: "red" },
+  { name: "Spicy BBQ", style: "Smoky Heat", tone: "warning" },
+  { name: "Mango Habanero", style: "Fruit Heat", tone: "red" },
+  { name: "Jumanji", style: "Bold", tone: "warning" },
+  { name: "Gochujang", style: "Korean Heat", tone: "red" },
+  { name: "Gold Rush", style: "Tangy", tone: "warning" },
+  { name: "Lemon Pepper", style: "Dry Rub", tone: "success" },
+  { name: "Saucey Garlic Parm", style: "Creamy", tone: "neutral" },
+  { name: "Garlic Parm Rub", style: "Dry Rub", tone: "success" },
+  { name: "Naked", style: "No Sauce", tone: "neutral" },
+] satisfies WingSauce[]
 
 export const foodMenuSections = [
   {
@@ -192,16 +221,41 @@ export const foodMenuSections = [
         description:
           "Iceberg wedge with pico, bacon bits and cojack shreds. Strippers or thighs tossed in sauce. Choose ranch or bleu cheese.",
       },
-      {
-        name: "Wing Sauces",
-        description:
-          "3 Pepper Fire, Cajun Heat, Flaming Honey, Garlic, Franks Hot, Skoltz Hot, Spicy BBQ, Mango Habanero, Jumanji, Gochujang, Gold Rush, Lemon Pepper, Saucey Garlic Parm, Garlic Parm Rub, Naked.",
-      },
     ],
   },
 ] satisfies FoodMenuSection[]
 
+const categoryFilters = ["All", ...foodMenuSections.map((section) => section.title)] as const
+
+function WingSauceGrid() {
+  return (
+    <div className="space-y-2 rounded-md border border-primary/20 bg-primary/6 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="text-sm font-semibold text-foreground">Wing Sauces</h4>
+        <SbBadge tone="blue">Choose one</SbBadge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {wingSauces.map((sauce) => (
+          <div
+            key={sauce.name}
+            className="min-h-16 rounded-md border border-border/70 bg-background/80 p-2"
+          >
+            <p className="text-sm font-semibold leading-5 text-foreground">
+              {sauce.name}
+            </p>
+            <SbBadge tone={sauce.tone} className="mt-1">
+              {sauce.style}
+            </SbBadge>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function FoodMenuCard({ section }: { section: FoodMenuSection }) {
+  const isWingsSection = section.title === "Wings and Things"
+
   return (
     <SbCard className="h-full space-y-3 border-border/70 bg-surface-2 p-3">
       <div className="flex items-center justify-between gap-3">
@@ -228,16 +282,50 @@ function FoodMenuCard({ section }: { section: FoodMenuSection }) {
           </div>
         ))}
       </div>
+
+      {isWingsSection ? <WingSauceGrid /> : null}
     </SbCard>
   )
 }
 
 export function FoodMenuGrid() {
+  const [activeCategory, setActiveCategory] =
+    useState<(typeof categoryFilters)[number]>("All")
+  const visibleSections =
+    activeCategory === "All"
+      ? foodMenuSections
+      : foodMenuSections.filter((section) => section.title === activeCategory)
+
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      {foodMenuSections.map((section) => (
-        <FoodMenuCard key={section.title} section={section} />
-      ))}
+    <div className="space-y-3">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {categoryFilters.map((category) => {
+          const isActive = category === activeCategory
+
+          return (
+            <button
+              key={category}
+              type="button"
+              className={cn(
+                "min-h-9 shrink-0 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+                isActive
+                  ? "border-primary bg-primary text-primary-foreground shadow-[var(--sb-glow-blue)]"
+                  : "border-border bg-surface-2 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              )}
+              aria-pressed={isActive}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        {visibleSections.map((section) => (
+          <FoodMenuCard key={section.title} section={section} />
+        ))}
+      </div>
     </div>
   )
 }

@@ -104,7 +104,7 @@ export function SbDayDetail({
                 </>
               )
 
-              return event.liveScore?.isLive && event.sourceUrl ? (
+              return event.sourceUrl ? (
                 <a
                   key={event.id}
                   href={event.sourceUrl}

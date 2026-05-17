@@ -739,6 +739,15 @@ function isLiveScoreEvent(event: UIEvent) {
   return Boolean(event.liveScore?.isLive && event.sourceUrl);
 }
 
+function isSourceLinkedSportsEvent(event: UIEvent) {
+  return Boolean(
+    event.sourceUrl &&
+      event.categories.some((category) =>
+        ["astros", "rockets", "texans", "mlb", "nba", "nfl"].includes(category)
+      )
+  );
+}
+
 function LiveScoreTeams({ event }: { event: UIEvent }) {
   if (!event.liveScore) {
     return null;
@@ -848,6 +857,7 @@ function CompactEventCard({
     isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
+  const sourceUrl = isSourceLinkedSportsEvent(event) ? event.sourceUrl : undefined;
 
   if (isLiveScoreEvent(event)) {
     return <LiveScoreCard event={event} compact />;
@@ -855,7 +865,9 @@ function CompactEventCard({
 
   return (
     <a
-      href="#calendar"
+      href={sourceUrl ?? "#calendar"}
+      target={sourceUrl ? "_blank" : undefined}
+      rel={sourceUrl ? "noreferrer" : undefined}
       className="min-w-52 max-w-60 shrink-0 rounded-md border border-border/70 bg-card p-2.5 shadow-[var(--sb-shadow-sm)] transition hover:border-primary/30 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-w-60"
     >
       <div className="space-y-1.5">
@@ -886,7 +898,9 @@ function CompactEventCard({
           ) : null}
         </div>
 
-        <p className="text-xs font-semibold text-primary">View date</p>
+        <p className="text-xs font-semibold text-primary">
+          {sourceUrl ? "View game" : "View date"}
+        </p>
       </div>
     </a>
   );
@@ -915,6 +929,7 @@ function FocalEventCard({
     isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
+  const sourceUrl = isSourceLinkedSportsEvent(event) ? event.sourceUrl : undefined;
 
   if (event.isAstros) {
     if (isLiveScoreEvent(event)) {
@@ -928,8 +943,14 @@ function FocalEventCard({
         dateTime={`${event.displayDate} - ${event.displayTime}`}
         logoUrls={event.logoUrls}
         cta={
-          <SbButton asChild className="w-full sm:w-auto" href="#calendar">
-            View on calendar
+          <SbButton
+            asChild
+            className="w-full sm:w-auto"
+            href={sourceUrl ?? "#calendar"}
+            target={sourceUrl ? "_blank" : undefined}
+            rel={sourceUrl ? "noreferrer" : undefined}
+          >
+            {sourceUrl ? "View game" : "View on calendar"}
           </SbButton>
         }
       />
@@ -976,8 +997,14 @@ function FocalEventCard({
         </p>
       </div>
 
-      <SbButton asChild className="w-full sm:w-auto" href="#calendar">
-        View on calendar
+      <SbButton
+        asChild
+        className="w-full sm:w-auto"
+        href={sourceUrl ?? "#calendar"}
+        target={sourceUrl ? "_blank" : undefined}
+        rel={sourceUrl ? "noreferrer" : undefined}
+      >
+        {sourceUrl ? "View game" : "View on calendar"}
       </SbButton>
     </SbCard>
   );
@@ -1477,33 +1504,41 @@ export default function Home() {
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {companionEvents.map((event) => (
-                        <a
-                          key={event.id}
-                          href="#calendar"
-                          className="rounded-md border border-border/70 bg-surface-1 p-2.5 transition hover:border-primary/30 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 space-y-1">
-                              <EventLogoStrip logoUrls={event.logoUrls} />
-                              <SbBadge
-                                tone={eventCategoryTone(event.primaryCategory)}
-                              >
-                                {event.primaryCategory}
-                              </SbBadge>
-                              <h3 className="truncate text-base font-semibold text-foreground">
-                                {event.title}
-                              </h3>
-                              <p className="text-sm font-semibold text-muted-foreground">
-                                {event.displayTime}
-                              </p>
+                      {companionEvents.map((event) => {
+                        const sourceUrl = isSourceLinkedSportsEvent(event)
+                          ? event.sourceUrl
+                          : undefined;
+
+                        return (
+                          <a
+                            key={event.id}
+                            href={sourceUrl ?? "#calendar"}
+                            target={sourceUrl ? "_blank" : undefined}
+                            rel={sourceUrl ? "noreferrer" : undefined}
+                            className="rounded-md border border-border/70 bg-surface-1 p-2.5 transition hover:border-primary/30 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 space-y-1">
+                                <EventLogoStrip logoUrls={event.logoUrls} />
+                                <SbBadge
+                                  tone={eventCategoryTone(event.primaryCategory)}
+                                >
+                                  {event.primaryCategory}
+                                </SbBadge>
+                                <h3 className="truncate text-base font-semibold text-foreground">
+                                  {event.title}
+                                </h3>
+                                <p className="text-sm font-semibold text-muted-foreground">
+                                  {event.displayTime}
+                                </p>
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-primary">
+                                {sourceUrl ? "Game" : "View"}
+                              </span>
                             </div>
-                            <span className="shrink-0 text-sm font-semibold text-primary">
-                              View
-                            </span>
-                          </div>
-                        </a>
-                      ))}
+                          </a>
+                        );
+                      })}
                     </div>
                   </SbCard>
                 ) : null}

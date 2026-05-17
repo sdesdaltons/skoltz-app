@@ -1100,10 +1100,10 @@ function getHeroDescription({
       const heroSpecials = formatHeroSpecials(currentTime);
 
       if (isOngoingEvent(focalEvent, currentTime)) {
-        return `The Astros game is on now with cold drinks and ${heroSpecials} at Skoltz.`;
+        return `The Astros game is on now with ${heroSpecials} at Skoltz.`;
       }
 
-      return `Catch the Astros game, cold drinks, and ${heroSpecials} at Skoltz.`;
+      return `Catch the Astros game and ${heroSpecials} at Skoltz.`;
     }
 
     if (isOngoingEvent(focalEvent, currentTime)) {

@@ -1383,8 +1383,8 @@ export default function Home() {
         <SbSection id="this-week" className="py-5">
           <SbContainer className="space-y-3">
             <SbSectionHeader
-              title="Upcoming events"
-              subtitle="The next few games, karaoke nights, and venue events."
+              title="This Week At Skoltz"
+              subtitle="The next few games, specials, and venue events."
               action={
                 <SbButton asChild href="#calendar" variant="ghost" size="sm">
                   Open calendar
@@ -1424,14 +1424,6 @@ export default function Home() {
                 </div>
               </SbCard>
             ) : null}
-          </SbContainer>
-        </SbSection>
-
-        <SbSection className="py-5">
-          <SbContainer className="space-y-3">
-            <SbSectionHeader
-              title="Featured Events"
-            />
 
             <div className="flex gap-4 overflow-x-auto pb-2">
               {sortedPromoCards.map((promo) => (

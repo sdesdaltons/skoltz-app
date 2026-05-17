@@ -25,14 +25,13 @@ import {
   type UIEvent,
 } from "@/features/events";
 import { cn } from "@/lib/utils";
-import tuesdaySpecialPromo from "../../Ads/tuesday-specials.png";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
 
 type CalendarFilter = "sports" | "specials" | "featured";
 
 type PromoCard = {
-  image: typeof tuesdaySpecialPromo;
+  image: typeof crawfishPromo;
   alt: string;
   title: string;
   subtitle: string;
@@ -66,15 +65,6 @@ const promoCards = [
       "3 lbs crawfish for $20. Drink specials: $2.75 aluminum bottles, $1 off seltzers, and $5 tea shots.",
     ctaText: "Sat May 16",
     schedule: { type: "date", month: 4, day: 16 },
-  },
-  {
-    image: tuesdaySpecialPromo,
-    alt: "Skoltz Tuesday specials graphic",
-    title: "Tuesday specials",
-    subtitle: "$2 tacos, $2 Ziegen pints, and $2.30 wells.",
-    details: "$2 Tacos & Ziegen Pints and $2.30 wells.",
-    ctaText: "Tuesdays",
-    schedule: { type: "weekly", day: 2 },
   },
   {
     image: dartTournamentPromo,

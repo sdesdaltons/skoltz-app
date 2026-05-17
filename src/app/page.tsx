@@ -155,6 +155,20 @@ function formatDailySpecialDetails(special: DailySpecial) {
   return special.items.join(" / ");
 }
 
+function getDailySpecialForDate(date: Date) {
+  return dailySpecials.find((special) => special.day === date.getDay());
+}
+
+function formatHeroSpecials(date: Date) {
+  const special = getDailySpecialForDate(date);
+
+  if (!special) {
+    return "tonight's specials";
+  }
+
+  return `${special.dayName}'s specials: ${formatDailySpecialDetails(special)}`;
+}
+
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
 const tonightWindowEndHour = 4;
 const karaokeStartHour = 21;
@@ -1083,11 +1097,13 @@ function getHeroDescription({
 
   if (focalEvent && isSameNightEvent(focalEvent, currentTime)) {
     if (focalEvent.isAstros) {
+      const heroSpecials = formatHeroSpecials(currentTime);
+
       if (isOngoingEvent(focalEvent, currentTime)) {
-        return "The Astros game is on now with cold drinks and tonight's specials at Skoltz.";
+        return `The Astros game is on now with cold drinks and ${heroSpecials} at Skoltz.`;
       }
 
-      return "Catch the Astros game, cold drinks, and tonight's specials at Skoltz.";
+      return `Catch the Astros game, cold drinks, and ${heroSpecials} at Skoltz.`;
     }
 
     if (isOngoingEvent(focalEvent, currentTime)) {

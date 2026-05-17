@@ -185,7 +185,7 @@ const featuredCalendarKinds = new Set<SbCalendarEvent["kind"]>([
 const astrosGametimeSpecials = [
   "$2 Hot Dogs",
   "$2 Ziegenbock Pints",
-].join(" and ");
+].join(" and ") + " during Astros games only";
 
 function eventCategoryTone(
   category: UIEvent["primaryCategory"]
@@ -882,7 +882,7 @@ function CompactEventCard({
           </h3>
           {showAstrosSpecials && event.isAstros ? (
             <p className="text-xs font-semibold text-muted-foreground">
-              $2 Hot Dogs / $2 Ziegenbock Pints
+              $2 Hot Dogs / $2 Ziegenbock Pints during Astros games only
             </p>
           ) : null}
         </div>

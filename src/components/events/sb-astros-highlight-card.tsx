@@ -4,7 +4,10 @@ import Image from "next/image"
 import { SbBadge, SbButton, SbCard } from "@/components/ui"
 import { cn } from "@/lib/utils"
 
-const defaultSpecials = ["$2 Hot Dogs", "$2 Ziegenbock Pints"]
+const defaultSpecials = [
+  "$2 Hot Dogs during Astros games only",
+  "$2 Ziegenbock Pints during Astros games only",
+]
 
 export function SbAstrosHighlightCard({
   title,

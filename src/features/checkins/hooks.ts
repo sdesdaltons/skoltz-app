@@ -12,10 +12,11 @@ import {
 import { CheckInError, type CheckInPosition } from "./types"
 
 const skoltzLocation: CheckInPosition = {
-  latitude: 29.7604,
-  longitude: -95.3698,
+  latitude: 29.8162032,
+  longitude: -95.7210336,
 }
-const allowedRadiusMeters = 150
+const allowedRadiusMeters = 300
+const maxAccuracyBufferMeters = 250
 const checkInCooldownMs = 12 * 60 * 60 * 1000
 
 type LatestCheckInRow = {
@@ -197,8 +198,12 @@ export function useCreateCheckIn() {
         longitude: position.coords.longitude,
       }
       const distance = distanceInMeters(skoltzLocation, checkInPosition)
+      const accuracyBuffer = Math.min(
+        position.coords.accuracy || 0,
+        maxAccuracyBufferMeters
+      )
 
-      if (distance > allowedRadiusMeters) {
+      if (distance > allowedRadiusMeters + accuracyBuffer) {
         throw new CheckInError(
           "TOO_FAR",
           "You need to be at Skoltz to check in."

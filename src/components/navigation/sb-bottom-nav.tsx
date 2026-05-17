@@ -6,15 +6,16 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 type NavItem = {
-  label: "Today" | "This Week" | "This Month"
+  label: "Today" | "This Week" | "This Month" | "Menu"
   href: string
-  icon: "today" | "week" | "month"
+  icon: "today" | "week" | "month" | "menu"
 }
 
 const navItems: NavItem[] = [
   { label: "Today", href: "/", icon: "today" },
   { label: "This Week", href: "/#this-week", icon: "week" },
   { label: "This Month", href: "/#calendar", icon: "month" },
+  { label: "Menu", href: "/menu", icon: "menu" },
 ]
 
 function NavIcon({ icon }: { icon: NavItem["icon"] }) {
@@ -58,14 +59,27 @@ function NavIcon({ icon }: { icon: NavItem["icon"] }) {
     )
   }
 
+  if (icon === "month") {
+    return (
+      <svg {...commonProps}>
+        <path d="M7 4v3" />
+        <path d="M17 4v3" />
+        <path d="M5 8h14" />
+        <path d="M6 6h12v14H6z" />
+        <path d="M8 12h8" />
+        <path d="M8 16h5" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...commonProps}>
-      <path d="M7 4v3" />
-      <path d="M17 4v3" />
-      <path d="M5 8h14" />
-      <path d="M6 6h12v14H6z" />
-      <path d="M8 12h8" />
-      <path d="M8 16h5" />
+      <path d="M7 5h10" />
+      <path d="M7 12h10" />
+      <path d="M7 19h10" />
+      <path d="M4 5h.01" />
+      <path d="M4 12h.01" />
+      <path d="M4 19h.01" />
     </svg>
   )
 }
@@ -84,6 +98,10 @@ export function SbBottomNav({
 
   useEffect(() => {
     function resolveActiveItem(calendarInView = false): NavItem["label"] | null {
+      if (pathname === "/menu") {
+        return "Menu"
+      }
+
       if (pathname === "/") {
         if (window.location.hash === "#calendar" || calendarInView) {
           return "This Month"
@@ -161,7 +179,7 @@ export function SbBottomNav({
         className
       )}
     >
-      <div className="mx-auto grid max-w-2xl grid-cols-3 gap-1">
+      <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1">
         {navItems.map((item) => {
           const isActive = item.label === effectiveActive
 

@@ -25,6 +25,7 @@ import {
   type UIEvent,
 } from "@/features/events";
 import { useAuth } from "@/features/auth/hooks";
+import { cn } from "@/lib/utils";
 import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
@@ -595,6 +596,104 @@ function EventLogoStrip({
   );
 }
 
+function isLiveScoreEvent(event: UIEvent) {
+  return Boolean(event.liveScore?.isLive && event.sourceUrl);
+}
+
+function LiveScoreTeams({ event }: { event: UIEvent }) {
+  if (!event.liveScore) {
+    return null;
+  }
+
+  return (
+    <div className="grid gap-1.5">
+      {event.liveScore.teams.map((team) => (
+        <div
+          key={`${event.id}-${team.homeAway}`}
+          className="flex min-h-9 items-center justify-between gap-3 rounded-md bg-background/80 px-2.5 py-1.5"
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            {team.logoUrl ? (
+              <span className="relative size-6 shrink-0 overflow-hidden rounded-full border border-border bg-surface-1">
+                <Image
+                  src={team.logoUrl}
+                  alt=""
+                  fill
+                  sizes="24px"
+                  className="object-contain p-0.5"
+                />
+              </span>
+            ) : null}
+            <span className="truncate text-sm font-semibold text-foreground">
+              {team.name}
+            </span>
+          </div>
+          <span className="text-xl font-semibold tabular-nums text-foreground">
+            {team.score}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LiveScoreCard({
+  event,
+  compact = false,
+}: {
+  event: UIEvent;
+  compact?: boolean;
+}) {
+  if (!event.liveScore || !event.sourceUrl) {
+    return null;
+  }
+
+  return (
+    <a
+      href={event.sourceUrl}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(
+        "block rounded-md border border-primary/40 bg-card shadow-[var(--sb-shadow-sm)] transition hover:border-primary/60 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        compact
+          ? "min-w-56 max-w-64 shrink-0 p-2.5 sm:min-w-64"
+          : "p-3.5 shadow-[var(--sb-glow-blue)] sm:p-4"
+      )}
+      aria-label={`Open ${event.title} live score on ${event.liveScore.provider}`}
+    >
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <SbBadge tone="blue">Live</SbBadge>
+          <SbBadge tone={eventCategoryTone(event.primaryCategory)}>
+            {event.categoryInfo[0]?.label ?? "Sports"}
+          </SbBadge>
+          <SbBadge tone="neutral">{event.liveScore.provider}</SbBadge>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase text-primary">
+            {event.liveScore.status}
+          </p>
+          <h2
+            className={cn(
+              "line-clamp-2 font-semibold tracking-normal text-foreground",
+              compact ? "text-sm leading-5" : "text-2xl sm:text-3xl"
+            )}
+          >
+            {event.title}
+          </h2>
+        </div>
+
+        <LiveScoreTeams event={event} />
+
+        <p className="text-xs font-semibold text-primary">
+          Open {event.liveScore.provider} scorecard
+        </p>
+      </div>
+    </a>
+  );
+}
+
 function CompactEventCard({
   event,
   currentTime,
@@ -610,6 +709,10 @@ function CompactEventCard({
     isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
+
+  if (isLiveScoreEvent(event)) {
+    return <LiveScoreCard event={event} compact />;
+  }
 
   return (
     <a
@@ -675,6 +778,10 @@ function FocalEventCard({
     isSameNightEvent(event, currentTime);
 
   if (event.isAstros) {
+    if (isLiveScoreEvent(event)) {
+      return <LiveScoreCard event={event} />;
+    }
+
     return (
       <SbAstrosHighlightCard
         title={event.title}
@@ -688,6 +795,10 @@ function FocalEventCard({
         }
       />
     );
+  }
+
+  if (isLiveScoreEvent(event)) {
+    return <LiveScoreCard event={event} />;
   }
 
   return (
@@ -741,6 +852,8 @@ function toCalendarEvent(event: UIEvent): SbCalendarEvent {
     time: event.displayTime,
     logoUrls: event.logoUrls,
     description: event.description,
+    sourceUrl: event.sourceUrl,
+    liveScore: event.liveScore,
   };
 }
 
@@ -946,12 +1059,15 @@ export default function Home() {
   const calendarQuery = useCalendarEvents(calendarMonth);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
+    const syncCurrentDate = () => {
       setCurrentDate(new Date());
-    }, 0);
+    };
+    const timeout = window.setTimeout(syncCurrentDate, 0);
+    const interval = window.setInterval(syncCurrentDate, 60 * 1000);
 
     return () => {
       window.clearTimeout(timeout);
+      window.clearInterval(interval);
     };
   }, []);
 
@@ -1264,7 +1380,7 @@ export default function Home() {
           </SbSection>
         ) : null}
 
-        <SbSection className="py-5">
+        <SbSection id="this-week" className="py-5">
           <SbContainer className="space-y-3">
             <SbSectionHeader
               title="Upcoming events"
@@ -1430,7 +1546,7 @@ export default function Home() {
         </SbSection>
       </main>
 
-      <SbBottomNav active="Home" />
+      <SbBottomNav active="Today" />
     </>
   );
 }

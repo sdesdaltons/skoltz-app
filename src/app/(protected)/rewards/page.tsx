@@ -210,7 +210,7 @@ export default function RewardsPage() {
           </SbContainer>
         </SbSection>
       </main>
-      <SbBottomNav active="Rewards" />
+      <SbBottomNav active={null} />
     </>
   )
 }

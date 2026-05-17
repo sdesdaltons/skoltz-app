@@ -6,16 +6,15 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 type NavItem = {
-  label: string
+  label: "Today" | "This Week" | "This Month"
   href: string
-  icon: "home" | "calendar" | "rewards" | "account"
+  icon: "today" | "week" | "month"
 }
 
 const navItems: NavItem[] = [
-  { label: "Home", href: "/", icon: "home" },
-  { label: "Calendar", href: "/#calendar", icon: "calendar" },
-  { label: "Rewards", href: "/rewards", icon: "rewards" },
-  { label: "Account", href: "/account", icon: "account" },
+  { label: "Today", href: "/", icon: "today" },
+  { label: "This Week", href: "/#this-week", icon: "week" },
+  { label: "This Month", href: "/#calendar", icon: "month" },
 ]
 
 function NavIcon({ icon }: { icon: NavItem["icon"] }) {
@@ -30,78 +29,75 @@ function NavIcon({ icon }: { icon: NavItem["icon"] }) {
     viewBox: "0 0 24 24",
   }
 
-  if (icon === "home") {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 11.5 12 5l8 6.5" />
-        <path d="M6.5 10.5V20h11v-9.5" />
-      </svg>
-    )
-  }
-
-  if (icon === "calendar") {
+  if (icon === "today") {
     return (
       <svg {...commonProps}>
         <path d="M7 4v3" />
         <path d="M17 4v3" />
         <path d="M5 8h14" />
         <path d="M6 6h12v14H6z" />
+        <path d="M9 13h6" />
       </svg>
     )
   }
 
-  if (icon === "rewards") {
+  if (icon === "week") {
     return (
       <svg {...commonProps}>
-        <path d="M12 4l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" />
+        <path d="M7 4v3" />
+        <path d="M17 4v3" />
+        <path d="M5 8h14" />
+        <path d="M6 6h12v14H6z" />
+        <path d="M8 12h1" />
+        <path d="M12 12h1" />
+        <path d="M16 12h1" />
+        <path d="M8 16h1" />
+        <path d="M12 16h1" />
+        <path d="M16 16h1" />
       </svg>
     )
   }
 
   return (
     <svg {...commonProps}>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M5 20c1.4-3.2 3.8-5 7-5s5.6 1.8 7 5" />
+      <path d="M7 4v3" />
+      <path d="M17 4v3" />
+      <path d="M5 8h14" />
+      <path d="M6 6h12v14H6z" />
+      <path d="M8 12h8" />
+      <path d="M8 16h5" />
     </svg>
   )
 }
 
 export function SbBottomNav({
-  active = "Home",
+  active = "Today",
   className,
 }: {
-  active?: NavItem["label"]
+  active?: NavItem["label"] | null
   className?: string
 }) {
   const pathname = usePathname()
-  const [effectiveActive, setEffectiveActive] = useState<NavItem["label"]>(
+  const [effectiveActive, setEffectiveActive] = useState<NavItem["label"] | null>(
     active
   )
 
   useEffect(() => {
-    function resolveActiveItem(calendarInView = false): NavItem["label"] {
-      if (pathname === "/calendar") {
-        return "Calendar"
-      }
-
-      if (pathname === "/rewards") {
-        return "Rewards"
-      }
-
-      if (pathname === "/account" || pathname === "/login") {
-        return "Account"
-      }
-
+    function resolveActiveItem(calendarInView = false): NavItem["label"] | null {
       if (pathname === "/") {
-        if (window.scrollY < 120 && !calendarInView) {
-          return "Home"
-        }
-
         if (window.location.hash === "#calendar" || calendarInView) {
-          return "Calendar"
+          return "This Month"
         }
 
-        return "Home"
+        if (window.location.hash === "#this-week") {
+          return "This Week"
+        }
+
+        if (window.scrollY < 120 && !calendarInView) {
+          return "Today"
+        }
+
+        return "Today"
       }
 
       return active
@@ -115,6 +111,7 @@ export function SbBottomNav({
     window.addEventListener("hashchange", updateActiveItem)
 
     const calendarSection = document.getElementById("calendar")
+    const thisWeekSection = document.getElementById("this-week")
     const calendarObserver =
       pathname === "/" && calendarSection
         ? new IntersectionObserver(
@@ -131,9 +128,28 @@ export function SbBottomNav({
 
     calendarObserver?.observe(calendarSection as Element)
 
+    const thisWeekObserver =
+      pathname === "/" && thisWeekSection
+        ? new IntersectionObserver(
+            ([entry]) => {
+              setEffectiveActive(
+                entry.isIntersecting ? "This Week" : resolveActiveItem()
+              )
+            },
+            {
+              root: null,
+              rootMargin: "-25% 0px -45% 0px",
+              threshold: 0,
+            }
+          )
+        : null
+
+    thisWeekObserver?.observe(thisWeekSection as Element)
+
     return () => {
       window.removeEventListener("hashchange", updateActiveItem)
       calendarObserver?.disconnect()
+      thisWeekObserver?.disconnect()
     }
   }, [active, pathname])
 
@@ -145,7 +161,7 @@ export function SbBottomNav({
         className
       )}
     >
-      <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-2xl grid-cols-3 gap-1">
         {navItems.map((item) => {
           const isActive = item.label === effectiveActive
 

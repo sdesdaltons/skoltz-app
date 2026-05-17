@@ -15,6 +15,7 @@ import { readMlbAstrosEvents, readMlbPostseasonEvents } from "./sources/mlb"
 import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 
 const eventStaleTime = 5 * 60 * 1000
+const liveEventRefetchInterval = 60 * 1000
 const upcomingSportsWindowDays = 45
 const venueTimeZone = "America/Chicago"
 const venueWeekdayFormatter = new Intl.DateTimeFormat("en-US", {
@@ -186,7 +187,7 @@ export function useUpcomingEvents() {
       )
     },
     staleTime: eventStaleTime,
-    refetchInterval: false,
+    refetchInterval: liveEventRefetchInterval,
   })
 }
 

@@ -22,6 +22,8 @@ export interface RawEvent {
   categories: EventCategory[]
   location: string
   logoUrls?: string[]
+  sourceUrl?: string
+  liveScore?: LiveScore
 }
 
 export interface UIEvent {
@@ -37,6 +39,23 @@ export interface UIEvent {
   primaryCategory: EventCategory
   location: string
   logoUrls: string[]
+  sourceUrl?: string
+  liveScore?: LiveScore
   isAstros: boolean
   isHighlighted: boolean
+}
+
+export type LiveScoreTeam = {
+  name: string
+  abbreviation: string
+  score: string
+  logoUrl?: string
+  homeAway: "home" | "away"
+}
+
+export type LiveScore = {
+  provider: "ESPN" | "MLB"
+  status: string
+  isLive: boolean
+  teams: [LiveScoreTeam, LiveScoreTeam]
 }

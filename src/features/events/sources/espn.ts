@@ -1,4 +1,4 @@
-import { type EventCategory, type RawEvent } from "../types"
+import { type EventCategory, type LiveScore, type RawEvent } from "../types"
 
 const postseasonType = 3
 const basketballDurationMs = 2.5 * 60 * 60 * 1000
@@ -31,14 +31,38 @@ type EspnEvent = {
       fullName?: string
     }
     competitors?: Array<{
+      homeAway?: "home" | "away"
+      score?: string
       team?: {
+        abbreviation?: string
+        displayName?: string
         logo?: string
+        name?: string
+        shortDisplayName?: string
       }
     }>
     notes?: Array<{
       headline?: string
     }>
+    status?: EspnStatus
   }>
+  links?: Array<{
+    href?: string
+    rel?: string[]
+  }>
+  status?: EspnStatus
+}
+
+type EspnStatus = {
+  displayClock?: string
+  period?: number
+  type?: {
+    state?: string
+    detail?: string
+    shortDetail?: string
+    description?: string
+    completed?: boolean
+  }
 }
 
 function getEspnLogoUrls(event: EspnEvent) {
@@ -47,6 +71,64 @@ function getEspnLogoUrls(event: EspnEvent) {
       ?.map((competitor) => competitor.team?.logo)
       .filter((logo): logo is string => Boolean(logo)) ?? []
   )
+}
+
+function getEspnSourceUrl(event: EspnEvent) {
+  return (
+    event.links?.find((link) => link.rel?.includes("summary"))?.href ??
+    event.links?.find((link) => link.href?.includes("espn.com"))?.href
+  )
+}
+
+function getEspnLiveScore(event: EspnEvent): LiveScore | undefined {
+  const competition = event.competitions?.[0]
+  const competitors = competition?.competitors ?? []
+  const awayTeam = competitors.find((competitor) => competitor.homeAway === "away")
+  const homeTeam = competitors.find((competitor) => competitor.homeAway === "home")
+  const status = competition?.status ?? event.status
+
+  if (!awayTeam?.team || !homeTeam?.team || !status?.type) {
+    return undefined
+  }
+
+  const statusLabel =
+    status.type.shortDetail ??
+    status.type.detail ??
+    status.type.description ??
+    "Game status"
+
+  return {
+    provider: "ESPN",
+    status:
+      status.type.state === "in" && status.displayClock
+        ? `${status.type.shortDetail ?? `Period ${status.period ?? ""}`} - ${status.displayClock}`
+        : statusLabel,
+    isLive: status.type.state === "in",
+    teams: [
+      {
+        name:
+          awayTeam.team.shortDisplayName ??
+          awayTeam.team.name ??
+          awayTeam.team.displayName ??
+          "Away",
+        abbreviation: awayTeam.team.abbreviation ?? "AWAY",
+        score: awayTeam.score ?? "0",
+        logoUrl: awayTeam.team.logo,
+        homeAway: "away",
+      },
+      {
+        name:
+          homeTeam.team.shortDisplayName ??
+          homeTeam.team.name ??
+          homeTeam.team.displayName ??
+          "Home",
+        abbreviation: homeTeam.team.abbreviation ?? "HOME",
+        score: homeTeam.score ?? "0",
+        logoUrl: homeTeam.team.logo,
+        homeAway: "home",
+      },
+    ],
+  }
 }
 
 const leagueConfigs: EspnLeagueConfig[] = [
@@ -113,6 +195,8 @@ function mapEspnEventToRawEvent(
     categories: [config.category],
     location: competition?.venue?.fullName ?? `${config.label} game`,
     logoUrls: getEspnLogoUrls(event),
+    sourceUrl: getEspnSourceUrl(event),
+    liveScore: getEspnLiveScore(event),
   }
 }
 

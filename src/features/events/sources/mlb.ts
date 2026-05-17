@@ -1,4 +1,4 @@
-import { type RawEvent } from "../types"
+import { type LiveScore, type RawEvent } from "../types"
 
 const astrosTeamId = 117
 const estimatedGameDurationMs = 3.5 * 60 * 60 * 1000
@@ -16,16 +16,19 @@ type MlbGame = {
   description?: string
   seriesDescription?: string
   status?: {
+    abstractGameState?: string
     detailedState?: string
   }
   teams: {
     away: {
+      score?: number
       team: {
         id: number
         name: string
       }
     }
     home: {
+      score?: number
       team: {
         id: number
         name: string
@@ -46,6 +49,36 @@ function getMlbGameLogoUrls(game: MlbGame) {
     getMlbTeamLogoUrl(game.teams.away.team.id),
     getMlbTeamLogoUrl(game.teams.home.team.id),
   ]
+}
+
+function getMlbGamedayUrl(game: MlbGame) {
+  return `https://www.mlb.com/gameday/${game.gamePk}`
+}
+
+function getMlbLiveScore(game: MlbGame): LiveScore {
+  const status = game.status?.detailedState ?? "Game status"
+
+  return {
+    provider: "MLB",
+    status,
+    isLive: game.status?.abstractGameState === "Live",
+    teams: [
+      {
+        name: game.teams.away.team.name,
+        abbreviation: game.teams.away.team.name,
+        score: String(game.teams.away.score ?? 0),
+        logoUrl: getMlbTeamLogoUrl(game.teams.away.team.id),
+        homeAway: "away",
+      },
+      {
+        name: game.teams.home.team.name,
+        abbreviation: game.teams.home.team.name,
+        score: String(game.teams.home.score ?? 0),
+        logoUrl: getMlbTeamLogoUrl(game.teams.home.team.id),
+        homeAway: "home",
+      },
+    ],
+  }
 }
 
 function formatSourceDate(date: Date) {
@@ -78,6 +111,8 @@ function mapMlbGameToRawEvent(game: MlbGame): RawEvent {
     categories: ["astros"],
     location: game.venue?.name ?? "Astros game",
     logoUrls: getMlbGameLogoUrls(game),
+    sourceUrl: getMlbGamedayUrl(game),
+    liveScore: getMlbLiveScore(game),
   }
 }
 
@@ -104,6 +139,8 @@ function mapMlbPostseasonGameToRawEvent(game: MlbGame): RawEvent {
     categories: ["mlb"],
     location: game.venue?.name ?? "MLB postseason game",
     logoUrls: getMlbGameLogoUrls(game),
+    sourceUrl: getMlbGamedayUrl(game),
+    liveScore: getMlbLiveScore(game),
   }
 }
 

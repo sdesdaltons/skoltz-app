@@ -8,6 +8,28 @@ export type SbCalendarEvent = {
   time?: string
   logoUrls?: string[]
   description?: string
+  sourceUrl?: string
+  liveScore?: {
+    provider: "ESPN" | "MLB"
+    status: string
+    isLive: boolean
+    teams: [
+      {
+        name: string
+        abbreviation: string
+        score: string
+        logoUrl?: string
+        homeAway: "home" | "away"
+      },
+      {
+        name: string
+        abbreviation: string
+        score: string
+        logoUrl?: string
+        homeAway: "home" | "away"
+      },
+    ]
+  }
 }
 
 export function SbCalendarDay({

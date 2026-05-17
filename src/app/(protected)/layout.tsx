@@ -44,7 +44,7 @@ export default function ProtectedLayout({
             </SbContainer>
           </SbSection>
         </main>
-        <SbBottomNav active="Account" />
+        <SbBottomNav active={null} />
       </>
     )
   }

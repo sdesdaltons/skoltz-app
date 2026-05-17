@@ -65,7 +65,7 @@ export default function AccountPage() {
           </SbContainer>
         </SbSection>
       </main>
-      <SbBottomNav active="Account" />
+      <SbBottomNav active={null} />
     </>
   )
 }

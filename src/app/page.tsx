@@ -51,6 +51,12 @@ type PromoCard = {
       };
 };
 
+type DailySpecial = {
+  day: number;
+  dayName: string;
+  items: string[];
+};
+
 const promoCards = [
   {
     image: crawfishPromo,
@@ -82,6 +88,83 @@ const promoCards = [
     schedule: { type: "date", month: 4, day: 25 },
   },
 ] satisfies PromoCard[];
+
+const dailySpecials = [
+  {
+    day: 1,
+    dayName: "Monday",
+    items: [
+      "$4 Starfucker",
+      "$4 Pinnacle Whipped",
+      "$3.50 Big Ass Beers",
+      "$6 Burger and Fries",
+    ],
+  },
+  {
+    day: 2,
+    dayName: "Tuesday",
+    items: [
+      "$3.50 Pink Starburst",
+      "$2.30 Well Drinks",
+      "$2.25 Ziegen Pints",
+      "$2 Tacos",
+    ],
+  },
+  {
+    day: 3,
+    dayName: "Wednesday",
+    items: [
+      "$3.50 Jolly Rancher",
+      "$4 Jack Daniels",
+      "$2.75 Aluminum Bottles",
+      "$8 Philly",
+    ],
+  },
+  {
+    day: 4,
+    dayName: "Thursday",
+    items: [
+      "$4 Grape Gatorade",
+      "$4 Titos",
+      "$15 Domestic Buckets",
+      "$1 Off Any Pizza",
+    ],
+  },
+  {
+    day: 5,
+    dayName: "Friday",
+    items: [
+      "$4 Mexican Candy",
+      "$4.50 Margaritas",
+      "$18 Import Buckets",
+      "$1 Wings",
+    ],
+  },
+  {
+    day: 6,
+    dayName: "Saturday",
+    items: [
+      "$5 Any Tea Shot",
+      "$1 Off Seltzers",
+      "$2.75 Aluminum Bottles",
+      "$5 Pulled Pork",
+    ],
+  },
+  {
+    day: 0,
+    dayName: "Sunday",
+    items: [
+      "$4 Skittles",
+      "$4 Fireball",
+      "$15 Domestic Buckets",
+      "$9 Wedge Salad",
+    ],
+  },
+] satisfies DailySpecial[];
+
+function formatDailySpecialDetails(special: DailySpecial) {
+  return special.items.join(" / ");
+}
 
 const startingSoonWindowMs = 2 * 60 * 60 * 1000;
 const tonightWindowEndHour = 4;
@@ -211,6 +294,17 @@ function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
   );
 }
 
+function sortDailySpecialsForWeek(
+  specials: DailySpecial[],
+  currentDate: Date
+) {
+  return [...specials].sort(
+    (firstSpecial, secondSpecial) =>
+      (firstSpecial.day - currentDate.getDay() + 7) % 7 -
+      ((secondSpecial.day - currentDate.getDay() + 7) % 7)
+  );
+}
+
 function isPromoActive(promo: PromoCard, currentDate: Date) {
   if (promo.schedule.type === "weekly") {
     return true;
@@ -311,6 +405,51 @@ function getPromoCalendarEventsForMonth(
       groupedPromos[key] = [...(groupedPromos[key] ?? []), promo.event];
 
       return groupedPromos;
+    },
+    {}
+  );
+}
+
+function getDailySpecialCalendarEventsForMonth(
+  specials: DailySpecial[],
+  month: Date
+): Record<string, SbCalendarEvent[]> {
+  const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+  const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const specialEvents: Array<{ date: Date; event: SbCalendarEvent }> = [];
+
+  specials.forEach((special) => {
+    const firstSpecialDate = new Date(monthStart);
+    const daysUntilSpecial =
+      (special.day - firstSpecialDate.getDay() + 7) % 7;
+
+    firstSpecialDate.setDate(firstSpecialDate.getDate() + daysUntilSpecial);
+
+    for (
+      const specialDate = new Date(firstSpecialDate);
+      specialDate <= monthEnd;
+      specialDate.setDate(specialDate.getDate() + 7)
+    ) {
+      specialEvents.push({
+        date: new Date(specialDate),
+        event: {
+          id: `daily-special-${special.dayName}-${dateKey(specialDate)}`,
+          title: `${special.dayName} specials`,
+          kind: "special",
+          time: "All day",
+          description: formatDailySpecialDetails(special),
+        },
+      });
+    }
+  });
+
+  return specialEvents.reduce<Record<string, SbCalendarEvent[]>>(
+    (groupedSpecials, special) => {
+      const key = dateKey(special.date);
+
+      groupedSpecials[key] = [...(groupedSpecials[key] ?? []), special.event];
+
+      return groupedSpecials;
     },
     {}
   );
@@ -1128,6 +1267,17 @@ export default function Home() {
     setPendingCalendarDetailKey(promoDateKey);
   }
 
+  function openDailySpecialOnCalendar(special: DailySpecial) {
+    const specialDate = startOfDay(today);
+    const daysUntilSpecial = (special.day - today.getDay() + 7) % 7;
+
+    specialDate.setDate(today.getDate() + daysUntilSpecial);
+    setSelectedCalendarMonth(
+      new Date(specialDate.getFullYear(), specialDate.getMonth(), 1)
+    );
+    setPendingCalendarDetailKey(dateKey(specialDate));
+  }
+
   function toggleCalendarFilter(filter: CalendarFilter) {
     setActiveCalendarFilters((currentFilters) =>
       currentFilters.includes(filter)
@@ -1175,10 +1325,14 @@ export default function Home() {
   );
   const visibleUpcomingEvents = upcomingEvents.slice(0, homepageUpcomingLimit);
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
+  const sortedDailySpecials = sortDailySpecialsForWeek(dailySpecials, today);
   const calendarEvents = mergeCalendarEvents(
     mergeCalendarEvents(
-      toCalendarEventsByDate(calendarQuery.data),
-      getAstrosSpecialCalendarEvents(calendarQuery.data)
+      mergeCalendarEvents(
+        toCalendarEventsByDate(calendarQuery.data),
+        getAstrosSpecialCalendarEvents(calendarQuery.data)
+      ),
+      getDailySpecialCalendarEventsForMonth(dailySpecials, calendarMonth)
     ),
     getPromoCalendarEventsForMonth(promoCards, calendarMonth, today)
   );
@@ -1424,6 +1578,37 @@ export default function Home() {
                 </div>
               </SbCard>
             ) : null}
+
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {sortedDailySpecials.map((special) => (
+                <button
+                  key={special.dayName}
+                  className="min-w-56 max-w-64 shrink-0 text-left sm:min-w-64"
+                  type="button"
+                  aria-label={`Open ${special.dayName} specials on the calendar`}
+                  onClick={() => openDailySpecialOnCalendar(special)}
+                >
+                  <SbCard className="h-full space-y-2 border-warning/35 bg-warning/10 p-3 transition hover:border-warning/60 hover:bg-warning/15">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-lg font-semibold">
+                        {special.dayName}
+                      </h3>
+                      <SbBadge tone="warning">Daily Specials</SbBadge>
+                    </div>
+                    <div className="grid gap-1">
+                      {special.items.map((item) => (
+                        <p
+                          key={item}
+                          className="rounded-sm bg-background/70 px-2 py-1 text-sm font-semibold text-foreground"
+                        >
+                          {item}
+                        </p>
+                      ))}
+                    </div>
+                  </SbCard>
+                </button>
+              ))}
+            </div>
 
             <div className="flex gap-4 overflow-x-auto pb-2">
               {sortedPromoCards.map((promo) => (

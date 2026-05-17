@@ -25,7 +25,7 @@ import {
   type UIEvent,
 } from "@/features/events";
 import { cn } from "@/lib/utils";
-import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
+import tuesdaySpecialPromo from "../../Ads/tuesday-specials.png";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
 

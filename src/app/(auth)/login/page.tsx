@@ -85,8 +85,8 @@ export default function LoginPage() {
                 Sign in to Skoltz
               </h1>
               <p className="text-sm leading-6 text-muted-foreground">
-                Guests can still browse events. Sign in when you need protected
-                account and rewards areas.
+                Guests can still browse events and the food menu. Sign in when
+                you need account access.
               </p>
               <div className="flex flex-wrap gap-3">
                 <SbButton asChild href="/" variant="secondary" size="sm">

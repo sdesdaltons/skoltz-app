@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Skoltz Sports Bar and Grill",
     short_name: "Skoltz",
-    description: "Events, rewards, and check-ins for Skoltz Sports Bar.",
+    description: "Events, food menu, and sports at Skoltz Sports Bar.",
     start_url: "/",
     scope: "/",
     display: "standalone",

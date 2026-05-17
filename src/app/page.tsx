@@ -24,7 +24,6 @@ import {
   useUpcomingEvents,
   type UIEvent,
 } from "@/features/events";
-import { useAuth } from "@/features/auth/hooks";
 import { cn } from "@/lib/utils";
 import tuesdaySpecialPromo from "../../Ads/AISelect_20260515_201550_Facebook.jpg";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
@@ -1122,12 +1121,10 @@ function getHeroDescription({
 function buildInAppAlerts({
   focalEvent,
   fridayKaraokeEvent,
-  isSignedIn,
   currentTime,
 }: {
   focalEvent?: UIEvent;
   fridayKaraokeEvent?: UIEvent;
-  isSignedIn: boolean;
   currentTime: Date;
 }) {
   const alerts: SbInAppAlert[] = [];
@@ -1185,22 +1182,10 @@ function buildInAppAlerts({
     }
   }
 
-  if (isSignedIn) {
-    alerts.push({
-      id: "rewards-check-in",
-      title: "Check in when you arrive",
-      description: "Eligible, server-verified check-ins earn 10 points.",
-      tone: "success",
-      actionHref: "/rewards",
-      actionLabel: "Rewards",
-    });
-  }
-
   return alerts.slice(0, 3);
 }
 
 export default function Home() {
-  const { hydrated: authHydrated, loading: authLoading, session } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedCalendarMonth, setSelectedCalendarMonth] =
     useState<Date | null>(null);
@@ -1370,29 +1355,16 @@ export default function Home() {
   const isLoading = upcomingQuery.isLoading || calendarQuery.isLoading;
   const isError = upcomingQuery.isError || calendarQuery.isError;
   const isEmpty = !isLoading && !isError && events.length === 0;
-  const isAuthReady = authHydrated && !authLoading;
-  const isSignedIn = Boolean(session);
-  const rewardsCtaTitle = !isAuthReady
-    ? "Checking account status"
-    : isSignedIn
-      ? "Rewards ready - check in at Skoltz tonight"
-      : "Sign in to earn rewards & check in";
-  const rewardsCtaDescription = !isAuthReady
-    ? "Confirming your rewards and check-in access."
-    : isSignedIn
-      ? "Eligible check-ins earn 10 points."
-      : "Rewards and venue check-ins are available after login.";
   const heroDescription = getHeroDescription({
     focalEvent,
     fridayKaraokeEvent,
     currentTime: today,
   });
   const inAppAlerts =
-    isAuthReady && !isLoading && !isError
+    !isLoading && !isError
       ? buildInAppAlerts({
           focalEvent,
           fridayKaraokeEvent,
-          isSignedIn,
           currentTime: today,
         })
       : [];
@@ -1422,34 +1394,6 @@ export default function Home() {
                 </p>
               </div>
             </div>
-
-            <SbCard className="border-border/80 bg-surface-2 p-2.5">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-sm font-semibold sm:text-base">
-                      {rewardsCtaTitle}
-                    </h2>
-                    {isAuthReady && isSignedIn ? (
-                      <SbBadge tone="success">Ready</SbBadge>
-                    ) : null}
-                  </div>
-                  <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
-                    {rewardsCtaDescription}
-                  </p>
-                </div>
-                {isAuthReady ? (
-                  <SbButton
-                    asChild
-                    href={isSignedIn ? "/rewards" : "/login"}
-                    className="w-full sm:w-auto"
-                    size="sm"
-                  >
-                    {isSignedIn ? "View rewards" : "Sign in"}
-                  </SbButton>
-                ) : null}
-              </div>
-            </SbCard>
 
             <PwaInstallBanner />
             <SbAlertList alerts={inAppAlerts} />

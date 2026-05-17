@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Skoltz",
-  description: "Events, rewards, and check-ins for Skoltz Sports Bar.",
+  description: "Events, food menu, and sports at Skoltz Sports Bar.",
   applicationName: "Skoltz",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

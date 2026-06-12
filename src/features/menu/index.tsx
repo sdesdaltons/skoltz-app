@@ -302,26 +302,46 @@ export function FoodMenuGrid() {
       ? foodMenuSections
       : foodMenuSections.filter((section) => section.title === activeCategory)
 
+  const totalItems = foodMenuSections.reduce(
+    (count, section) => count + section.items.length,
+    0
+  )
+
   return (
     <div className="space-y-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {categoryFilters.map((category) => {
           const isActive = category === activeCategory
+          const itemCount =
+            category === "All"
+              ? totalItems
+              : foodMenuSections.find((section) => section.title === category)
+                  ?.items.length ?? 0
 
           return (
             <button
               key={category}
               type="button"
               className={cn(
-                "min-h-9 shrink-0 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+                "min-h-16 rounded-lg border p-2.5 text-left transition-colors",
                 isActive
-                  ? "border-primary bg-primary text-primary-foreground shadow-[var(--sb-glow-blue)]"
-                  : "border-border bg-surface-2 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  ? "border-warning/60 bg-warning/15 shadow-[0_0_0_1px_rgb(255_176_32_/_0.18),0_0_14px_rgb(255_176_32_/_0.12)]"
+                  : "border-border bg-surface-2 hover:border-warning/40"
               )}
               aria-pressed={isActive}
               onClick={() => setActiveCategory(category)}
             >
-              {category}
+              <p
+                className={cn(
+                  "text-sm font-bold leading-5",
+                  isActive ? "text-warning" : "text-foreground"
+                )}
+              >
+                {category === "All" ? "Full Menu" : category}
+              </p>
+              <p className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                {itemCount} items
+              </p>
             </button>
           )
         })}

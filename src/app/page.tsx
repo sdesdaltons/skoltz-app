@@ -168,6 +168,90 @@ function formatDailySpecialDetails(special: DailySpecial) {
   return special.items.join(" / ");
 }
 
+const foodSpecialKeywords = [
+  "burger",
+  "fries",
+  "taco",
+  "pizza",
+  "philly",
+  "wing",
+  "pork",
+  "salad",
+  "hot dog",
+];
+
+function parseSpecialItem(item: string) {
+  const match = item.match(/^(\$[\d.]+)\s+(Off\s+)?(.+)$/i);
+
+  if (!match) {
+    return { price: undefined, label: item };
+  }
+
+  return {
+    price: match[2] ? `${match[1]} off` : match[1],
+    label: match[3],
+  };
+}
+
+function isFoodSpecial(item: string) {
+  const lowerItem = item.toLowerCase();
+
+  return foodSpecialKeywords.some((keyword) => lowerItem.includes(keyword));
+}
+
+function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-warning">
+          Tonight&apos;s specials
+        </p>
+        <SbBadge tone="warning">{special.dayName}</SbBadge>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {special.items.map((item) => {
+          const { price, label } = parseSpecialItem(item);
+          const isFood = isFoodSpecial(item);
+
+          return (
+            <div
+              key={item}
+              className={cn(
+                "rounded-lg border p-2.5",
+                isFood
+                  ? "border-warning/45 bg-warning/10"
+                  : "border-primary/45 bg-primary/10"
+              )}
+            >
+              {price ? (
+                <p
+                  className={cn(
+                    "text-2xl font-black leading-none tabular-nums",
+                    isFood ? "text-warning" : "text-primary"
+                  )}
+                >
+                  {price}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs font-bold uppercase leading-4 tracking-wide text-foreground">
+                {label}
+              </p>
+              <p
+                className={cn(
+                  "mt-1 text-[0.6rem] font-bold uppercase tracking-[0.14em]",
+                  isFood ? "text-warning/80" : "text-primary/90"
+                )}
+              >
+                {isFood ? "Food" : "Drinks"}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function getDailySpecialForDate(date: Date) {
   return dailySpecials.find((special) => special.day === date.getDay());
 }
@@ -1419,11 +1503,11 @@ export default function Home() {
     <>
       <OfflineBanner />
       <main id="home" className="flex-1 pb-28">
-        <SbSection className="sb-hero py-6 sm:py-9">
+        <SbSection className="sb-hero py-4 sm:py-8">
           <SbContainer className="space-y-4">
-            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
+            <div className="sb-poster relative overflow-hidden rounded-xl border border-primary/25 p-4 shadow-[var(--sb-shadow-lg)] sm:p-6">
+              <div className="relative space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <SbLogo className="h-9 w-auto sm:h-10" />
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-primary">
                     <span
@@ -1433,61 +1517,29 @@ export default function Home() {
                     {todayLabel}
                   </span>
                 </div>
-                <h1 className="text-3xl font-semibold tracking-normal text-foreground sm:text-5xl">
-                  Tonight at Skoltz
-                </h1>
-                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                <div className="space-y-2">
+                  <h1 className="text-[2.6rem] font-black uppercase leading-none tracking-tight text-foreground sm:text-6xl">
+                    Tonight at{" "}
+                    <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      Skoltz
+                    </span>
+                  </h1>
+                  <div
+                    aria-hidden
+                    className="h-1 w-24 rounded-full bg-gradient-to-r from-primary to-accent"
+                  />
+                </div>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                   {heroDescription}
                 </p>
+                {todayDailySpecial ? (
+                  <TonightSpecialsGrid special={todayDailySpecial} />
+                ) : null}
                 {featuredPromoMention ? (
                   <p className="max-w-2xl rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold leading-6 text-foreground">
                     {featuredPromoMention}
                   </p>
                 ) : null}
-                {todayDailySpecial ? (
-                  <div className="max-w-2xl space-y-1.5 rounded-md border border-warning/35 bg-warning/10 px-3 py-2.5 shadow-[0_0_14px_rgb(255_176_32_/_0.08)]">
-                    <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-warning">
-                      {todayDailySpecial.dayName} specials
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {todayDailySpecial.items.map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-sm bg-background/70 px-2 py-1 text-xs font-semibold text-foreground"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <PwaInstallBanner />
-
-            {featuredPromoCards.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {featuredPromoCards.map((promo) => (
-                  <button
-                    key={promo.title}
-                    className="text-left"
-                    type="button"
-                    aria-label={`Open ${promo.title} on the calendar`}
-                    onClick={() => openPromoOnCalendar(promo)}
-                  >
-                    <SbPromoCard
-                      image={promo.image}
-                      alt={promo.alt}
-                      title={promo.title}
-                      subtitle={promo.subtitle}
-                      ctaText={promo.ctaText}
-                      className="h-full border-primary/50 text-left shadow-[var(--sb-glow-blue)]"
-                    />
-                  </button>
-                ))}
-              </div>
-            ) : null}
 
             {isLoading ? (
               <SbEventCardSkeleton className="min-h-72 border-primary/40 bg-primary/10 shadow-[var(--sb-glow-blue)]" />
@@ -1577,6 +1629,33 @@ export default function Home() {
                     </div>
                   </SbCard>
                 ) : null}
+              </div>
+            ) : null}
+              </div>
+            </div>
+
+            <PwaInstallBanner />
+
+            {featuredPromoCards.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {featuredPromoCards.map((promo) => (
+                  <button
+                    key={promo.title}
+                    className="text-left"
+                    type="button"
+                    aria-label={`Open ${promo.title} on the calendar`}
+                    onClick={() => openPromoOnCalendar(promo)}
+                  >
+                    <SbPromoCard
+                      image={promo.image}
+                      alt={promo.alt}
+                      title={promo.title}
+                      subtitle={promo.subtitle}
+                      ctaText={promo.ctaText}
+                      className="h-full border-primary/50 text-left shadow-[var(--sb-glow-blue)]"
+                    />
+                  </button>
+                ))}
               </div>
             ) : null}
           </SbContainer>
@@ -1669,22 +1748,42 @@ export default function Home() {
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-semibold">
+                        <h3
+                          className={cn(
+                            "text-lg font-bold uppercase tracking-wide",
+                            isTodaySpecial && "text-warning"
+                          )}
+                        >
                           {special.dayName}
                         </h3>
-                        <SbBadge tone="warning">
-                          {isTodaySpecial ? "Tonight" : "Daily Specials"}
-                        </SbBadge>
+                        {isTodaySpecial ? (
+                          <SbBadge tone="warning">Tonight</SbBadge>
+                        ) : (
+                          <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                            Specials
+                          </span>
+                        )}
                       </div>
                       <div className="grid gap-1">
-                        {special.items.map((item) => (
-                          <p
-                            key={item}
-                            className="rounded-sm border-l-2 border-warning/50 bg-background/70 px-2 py-1 text-sm font-semibold text-foreground"
-                          >
-                            {item}
-                          </p>
-                        ))}
+                        {special.items.map((item) => {
+                          const { price, label } = parseSpecialItem(item);
+
+                          return (
+                            <div
+                              key={item}
+                              className="flex items-baseline gap-1.5 rounded-sm bg-background/70 px-2 py-1"
+                            >
+                              {price ? (
+                                <span className="shrink-0 text-sm font-black tabular-nums text-warning">
+                                  {price}
+                                </span>
+                              ) : null}
+                              <span className="truncate text-xs font-semibold text-foreground">
+                                {label}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </SbCard>
                   </button>

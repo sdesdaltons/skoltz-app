@@ -66,7 +66,12 @@ type DailySpecial = {
   day: number;
   dayName: string;
   items: string[];
+  flyer: string;
 };
+
+function dailySpecialFlyer(dayName: string) {
+  return `/assets/skoltz-ads/daily-specials-v4/${dayName.toLowerCase()}-special-flyer-v4.webp`;
+}
 
 const promoCards = [
   {
@@ -101,6 +106,7 @@ const dailySpecials = [
       "$3.50 Big Ass Beers",
       "$6 Burger and Fries",
     ],
+    flyer: dailySpecialFlyer("Monday"),
   },
   {
     day: 2,
@@ -111,6 +117,7 @@ const dailySpecials = [
       "$2.25 Ziegen Pints",
       "$2 Tacos",
     ],
+    flyer: dailySpecialFlyer("Tuesday"),
   },
   {
     day: 3,
@@ -121,6 +128,7 @@ const dailySpecials = [
       "$2.75 Aluminum Bottles",
       "$8 Philly",
     ],
+    flyer: dailySpecialFlyer("Wednesday"),
   },
   {
     day: 4,
@@ -131,6 +139,7 @@ const dailySpecials = [
       "$15 Domestic Buckets",
       "$1 Off Any Pizza",
     ],
+    flyer: dailySpecialFlyer("Thursday"),
   },
   {
     day: 5,
@@ -141,6 +150,7 @@ const dailySpecials = [
       "$18 Import Buckets",
       "$1 Wings",
     ],
+    flyer: dailySpecialFlyer("Friday"),
   },
   {
     day: 6,
@@ -151,6 +161,7 @@ const dailySpecials = [
       "$2.75 Aluminum Bottles",
       "$5 Pulled Pork",
     ],
+    flyer: dailySpecialFlyer("Saturday"),
   },
   {
     day: 0,
@@ -161,6 +172,7 @@ const dailySpecials = [
       "$15 Domestic Buckets",
       "$9 Wedge Salad",
     ],
+    flyer: dailySpecialFlyer("Sunday"),
   },
 ] satisfies DailySpecial[];
 
@@ -272,62 +284,60 @@ function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
         </p>
         <SbBadge tone="warning">{special.dayName}</SbBadge>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        {special.items.map((item) => {
-          const { price, label } = parseSpecialItem(item);
-          const kind = classifySpecialItem(item);
-          const isFood = kind === "food";
-          const visual = specialVisualFor(item);
+      <div className="flex gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={special.flyer}
+          alt={`${special.dayName} specials flyer`}
+          width={1080}
+          height={1920}
+          className="w-36 shrink-0 self-start rounded-lg border border-border/60 shadow-[var(--sb-shadow-md)] sm:w-44"
+        />
+        <div className="grid min-w-0 flex-1 content-start gap-1.5">
+          {special.items.map((item) => {
+            const { price, label } = parseSpecialItem(item);
+            const kind = classifySpecialItem(item);
+            const isFood = kind === "food";
+            const visual = specialVisualFor(item);
 
-          return (
-            <div
-              key={item}
-              className={cn(
-                "relative overflow-hidden rounded-lg border p-2.5",
-                isFood
-                  ? "border-warning/45 bg-warning/10"
-                  : "border-primary/45 bg-primary/10"
-              )}
-            >
-              {visual ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={visual}
-                  alt=""
-                  aria-hidden
-                  width={48}
-                  height={48}
-                  className="pointer-events-none absolute right-1 bottom-1 size-12"
-                />
-              ) : null}
-              {price ? (
-                <p
-                  className={cn(
-                    "text-2xl font-black leading-none tabular-nums",
-                    isFood ? "text-warning" : "text-primary"
-                  )}
-                >
-                  {price}
-                </p>
-              ) : null}
-              <p className="relative mt-1 pr-9 text-xs font-bold uppercase leading-4 tracking-wide text-foreground">
-                {label}
-              </p>
-              <p
+            return (
+              <div
+                key={item}
                 className={cn(
-                  "relative mt-1 text-[0.6rem] font-bold uppercase tracking-[0.14em]",
-                  isFood ? "text-warning/80" : "text-primary/90"
+                  "relative overflow-hidden rounded-md border p-2",
+                  isFood
+                    ? "border-warning/45 bg-warning/10"
+                    : "border-primary/45 bg-primary/10"
                 )}
               >
-                {kind === "food"
-                  ? "Food"
-                  : kind === "drink"
-                    ? "Drinks"
-                    : "Special"}
-              </p>
-            </div>
-          );
-        })}
+                {visual ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={visual}
+                    alt=""
+                    aria-hidden
+                    width={32}
+                    height={32}
+                    className="pointer-events-none absolute top-1/2 right-1.5 size-8 -translate-y-1/2"
+                  />
+                ) : null}
+                {price ? (
+                  <p
+                    className={cn(
+                      "text-lg font-black leading-none tabular-nums",
+                      isFood ? "text-warning" : "text-primary"
+                    )}
+                  >
+                    {price}
+                  </p>
+                ) : null}
+                <p className="relative mt-0.5 pr-9 text-[0.65rem] font-bold uppercase leading-4 tracking-wide text-foreground">
+                  {label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -1838,6 +1848,43 @@ export default function Home() {
                 </div>
               </SbCard>
             ) : null}
+
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {sortedDailySpecials.map((special) => {
+                const isTodaySpecial = special.day === today.getDay();
+
+                return (
+                  <button
+                    key={special.dayName}
+                    type="button"
+                    aria-label={`Open ${special.dayName} specials on the calendar`}
+                    onClick={() => openDailySpecialOnCalendar(special)}
+                    className={cn(
+                      "relative w-36 shrink-0 overflow-hidden rounded-lg border text-left transition hover:border-warning/60",
+                      isTodaySpecial
+                        ? "border-warning/70 shadow-[0_0_0_1px_rgb(255_176_32_/_0.25),0_0_16px_rgb(255_176_32_/_0.16)]"
+                        : "border-border/70"
+                    )}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={special.flyer}
+                      alt=""
+                      aria-hidden
+                      width={1080}
+                      height={1920}
+                      loading="lazy"
+                      className="w-full"
+                    />
+                    {isTodaySpecial ? (
+                      <span className="absolute top-1.5 right-1.5">
+                        <SbBadge tone="warning">Tonight</SbBadge>
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
 
             <div className="flex gap-3 overflow-x-auto pb-2">
               {sortedDailySpecials.map((special) => {

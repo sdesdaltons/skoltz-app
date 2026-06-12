@@ -193,10 +193,39 @@ function parseSpecialItem(item: string) {
   };
 }
 
-function isFoodSpecial(item: string) {
+const drinkSpecialKeywords = [
+  "beer",
+  "bottle",
+  "bucket",
+  "seltzer",
+  "margarita",
+  "shot",
+  "pint",
+  "well drink",
+  "starfucker",
+  "whipped",
+  "starburst",
+  "rancher",
+  "jack daniels",
+  "gatorade",
+  "titos",
+  "candy",
+  "fireball",
+  "skittles",
+];
+
+function classifySpecialItem(item: string): "food" | "drink" | "special" {
   const lowerItem = item.toLowerCase();
 
-  return foodSpecialKeywords.some((keyword) => lowerItem.includes(keyword));
+  if (foodSpecialKeywords.some((keyword) => lowerItem.includes(keyword))) {
+    return "food";
+  }
+
+  if (drinkSpecialKeywords.some((keyword) => lowerItem.includes(keyword))) {
+    return "drink";
+  }
+
+  return "special";
 }
 
 function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
@@ -211,7 +240,8 @@ function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
       <div className="grid grid-cols-2 gap-2">
         {special.items.map((item) => {
           const { price, label } = parseSpecialItem(item);
-          const isFood = isFoodSpecial(item);
+          const kind = classifySpecialItem(item);
+          const isFood = kind === "food";
 
           return (
             <div
@@ -242,7 +272,11 @@ function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
                   isFood ? "text-warning/80" : "text-primary/90"
                 )}
               >
-                {isFood ? "Food" : "Drinks"}
+                {kind === "food"
+                  ? "Food"
+                  : kind === "drink"
+                    ? "Drinks"
+                    : "Special"}
               </p>
             </div>
           );

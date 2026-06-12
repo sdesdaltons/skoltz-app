@@ -214,6 +214,41 @@ const drinkSpecialKeywords = [
   "skittles",
 ];
 
+function specialVisualFor(item: string) {
+  const lowerItem = item.toLowerCase();
+  const kind = classifySpecialItem(item);
+
+  if (kind === "food") {
+    if (lowerItem.includes("wing")) {
+      return "/assets/visuals/wings.svg";
+    }
+
+    if (lowerItem.includes("burger")) {
+      return "/assets/visuals/burger.svg";
+    }
+
+    if (lowerItem.includes("taco")) {
+      return "/assets/visuals/tacos.svg";
+    }
+
+    if (lowerItem.includes("pizza")) {
+      return "/assets/visuals/pizza.svg";
+    }
+
+    return "/assets/visuals/appetizers.svg";
+  }
+
+  if (kind === "drink") {
+    return ["beer", "bucket", "bottle", "pint", "seltzer"].some((keyword) =>
+      lowerItem.includes(keyword)
+    )
+      ? "/assets/visuals/beer-bucket.svg"
+      : "/assets/visuals/margarita.svg";
+  }
+
+  return undefined;
+}
+
 function classifySpecialItem(item: string): "food" | "drink" | "special" {
   const lowerItem = item.toLowerCase();
 
@@ -242,17 +277,29 @@ function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
           const { price, label } = parseSpecialItem(item);
           const kind = classifySpecialItem(item);
           const isFood = kind === "food";
+          const visual = specialVisualFor(item);
 
           return (
             <div
               key={item}
               className={cn(
-                "rounded-lg border p-2.5",
+                "relative overflow-hidden rounded-lg border p-2.5",
                 isFood
                   ? "border-warning/45 bg-warning/10"
                   : "border-primary/45 bg-primary/10"
               )}
             >
+              {visual ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={visual}
+                  alt=""
+                  aria-hidden
+                  width={48}
+                  height={48}
+                  className="pointer-events-none absolute right-1 bottom-1 size-12"
+                />
+              ) : null}
               {price ? (
                 <p
                   className={cn(
@@ -263,12 +310,12 @@ function TonightSpecialsGrid({ special }: { special: DailySpecial }) {
                   {price}
                 </p>
               ) : null}
-              <p className="mt-1 text-xs font-bold uppercase leading-4 tracking-wide text-foreground">
+              <p className="relative mt-1 pr-9 text-xs font-bold uppercase leading-4 tracking-wide text-foreground">
                 {label}
               </p>
               <p
                 className={cn(
-                  "mt-1 text-[0.6rem] font-bold uppercase tracking-[0.14em]",
+                  "relative mt-1 text-[0.6rem] font-bold uppercase tracking-[0.14em]",
                   isFood ? "text-warning/80" : "text-primary/90"
                 )}
               >
@@ -1166,11 +1213,28 @@ function FocalEventCard({
     <SbCard
       className={
         isFridayKaraoke
-          ? "space-y-3 border-warning/45 bg-warning/10 p-4 shadow-[0_0_0_1px_rgb(249_168_37_/_0.14),0_0_18px_rgb(249_168_37_/_0.12)]"
+          ? "relative space-y-3 overflow-hidden border-warning/45 bg-warning/10 p-4 shadow-[0_0_0_1px_rgb(249_168_37_/_0.14),0_0_18px_rgb(249_168_37_/_0.12)]"
           : "space-y-3 border-primary/30 bg-surface-2 p-4 shadow-[0_0_0_1px_rgb(30_77_255_/_0.12),0_0_16px_rgb(30_77_255_/_0.1)]"
       }
     >
-      <div className="flex flex-wrap gap-1.5">
+      {isFridayKaraoke ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/visuals/karaoke-night.svg"
+            alt=""
+            aria-hidden
+            width={800}
+            height={480}
+            className="pointer-events-none absolute inset-0 size-full object-cover opacity-30"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/30 via-background/55 to-background/75"
+          />
+        </>
+      ) : null}
+      <div className="relative flex flex-wrap gap-1.5">
         <EventLogoStrip logoUrls={event.logoUrls} size="md" />
         {event.categoryInfo.map((category) => (
           <SbBadge key={category.value} tone={eventCategoryTone(category.value)}>
@@ -1183,7 +1247,7 @@ function FocalEventCard({
         <SbBadge tone="blue">{getFocalStatusLabel(event, currentTime)}</SbBadge>
       </div>
 
-      <div className="space-y-2">
+      <div className="relative space-y-2">
         <p className="text-sm font-semibold text-muted-foreground">
           {event.displayDate} - {event.displayTime}
         </p>
@@ -1204,7 +1268,7 @@ function FocalEventCard({
           muted
           playsInline
           preload="metadata"
-          className="block h-auto w-full overflow-hidden rounded-md border border-warning/35 bg-background"
+          className="relative block h-auto w-full overflow-hidden rounded-md border border-warning/35 bg-background"
         >
           <source src={karaokePromoVideoSrc} type="video/mp4" />
         </video>
@@ -1212,7 +1276,7 @@ function FocalEventCard({
 
       <SbButton
         asChild
-        className="w-full sm:w-auto"
+        className="relative w-full sm:w-auto"
         href={sourceUrl ?? "#calendar"}
         target={sourceUrl ? "_blank" : undefined}
         rel={sourceUrl ? "noreferrer" : undefined}
@@ -1540,6 +1604,19 @@ export default function Home() {
         <SbSection className="sb-hero py-4 sm:py-8">
           <SbContainer className="space-y-4">
             <div className="sb-poster relative overflow-hidden rounded-xl border border-primary/25 p-4 shadow-[var(--sb-shadow-lg)] sm:p-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/visuals/hero-atmosphere.svg"
+                alt=""
+                aria-hidden
+                width={800}
+                height={480}
+                className="pointer-events-none absolute inset-0 size-full object-cover object-top opacity-80"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/40 via-background/65 to-background/90"
+              />
               <div className="relative space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <SbLogo className="h-9 w-auto sm:h-10" />
@@ -1765,6 +1842,12 @@ export default function Home() {
             <div className="flex gap-3 overflow-x-auto pb-2">
               {sortedDailySpecials.map((special) => {
                 const isTodaySpecial = special.day === today.getDay();
+                const foodItem = special.items.find(
+                  (item) => classifySpecialItem(item) === "food"
+                );
+                const dayVisual = foodItem
+                  ? specialVisualFor(foodItem)
+                  : undefined;
 
                 return (
                   <button
@@ -1782,14 +1865,27 @@ export default function Home() {
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h3
-                          className={cn(
-                            "text-lg font-bold uppercase tracking-wide",
-                            isTodaySpecial && "text-warning"
-                          )}
-                        >
-                          {special.dayName}
-                        </h3>
+                        <div className="flex min-w-0 items-center gap-2">
+                          {dayVisual ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={dayVisual}
+                              alt=""
+                              aria-hidden
+                              width={32}
+                              height={32}
+                              className="size-8 shrink-0"
+                            />
+                          ) : null}
+                          <h3
+                            className={cn(
+                              "truncate text-lg font-bold uppercase tracking-wide",
+                              isTodaySpecial && "text-warning"
+                            )}
+                          >
+                            {special.dayName}
+                          </h3>
+                        </div>
                         {isTodaySpecial ? (
                           <SbBadge tone="warning">Tonight</SbBadge>
                         ) : (

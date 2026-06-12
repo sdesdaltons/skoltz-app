@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+  <circle cx="48" cy="54" r="34" fill="#1e4dff" opacity="0.16" filter="url(#g)"/>
+  <!-- bottles -->
+  <g>
+    <path d="M34 50 v-16 q0 -5 3 -8 v-8 h6 v8 q3 3 3 8 v16 z" fill="#8a5a2a"/>
+    <rect x="37" y="18" width="6" height="4" fill="#ffb020"/>
+    <path d="M52 50 v-20 q0 -5 3 -8 v-6 h6 v6 q3 3 3 8 v20 z" fill="#2e6b34"/>
+    <rect x="55" y="16" width="6" height="4" fill="#e53935"/>
+    <path d="M22 52 v-12 q0 -5 3 -8 v-8 h6 v8 q3 3 3 8 v12 z" fill="#8a5a2a" opacity="0.9"/>
+    <path d="M64 52 v-12 q0 -5 3 -8 v-8 h6 v8 q3 3 3 8 v12 z" fill="#5a4632" opacity="0.9"/>
+  </g>
+  <!-- ice -->
+  <g fill="#bcd4ff">
+    <rect x="26" y="46" width="9" height="9" rx="2" transform="rotate(12 30 50)"/>
+    <rect x="44" y="44" width="9" height="9" rx="2" transform="rotate(-10 48 48)"/>
+    <rect x="60" y="46" width="9" height="9" rx="2" transform="rotate(18 64 50)"/>
+  </g>
+  <!-- bucket -->
+  <path d="M18 50 h60 l-7 32 q-1 4 -5 4 h-36 q-4 0 -5 -4 z" fill="#3a3a44"/>
+  <path d="M18 50 h60 l-2 8 h-56 z" fill="#4a4a56"/>
+  <path d="M24 58 l5 24" stroke="#5c5c6a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M72 58 l-5 24" stroke="#5c5c6a" stroke-width="3" stroke-linecap="round"/>
+  <rect x="34" y="64" width="28" height="10" rx="5" fill="#1e4dff" opacity="0.85"/>
+</svg>

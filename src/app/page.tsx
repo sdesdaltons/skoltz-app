@@ -1857,7 +1857,7 @@ export default function Home() {
                   <button
                     key={special.dayName}
                     type="button"
-                    aria-label={`Open ${special.dayName} specials on the calendar`}
+                    aria-label={`Open ${special.dayName} specials on the calendar: ${special.items.join(", ")}`}
                     onClick={() => openDailySpecialOnCalendar(special)}
                     className={cn(
                       "relative w-36 shrink-0 overflow-hidden rounded-lg border text-left transition hover:border-warning/60",
@@ -1886,87 +1886,6 @@ export default function Home() {
               })}
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {sortedDailySpecials.map((special) => {
-                const isTodaySpecial = special.day === today.getDay();
-                const foodItem = special.items.find(
-                  (item) => classifySpecialItem(item) === "food"
-                );
-                const dayVisual = foodItem
-                  ? specialVisualFor(foodItem)
-                  : undefined;
-
-                return (
-                  <button
-                    key={special.dayName}
-                    className="min-w-56 max-w-64 shrink-0 text-left sm:min-w-64"
-                    type="button"
-                    aria-label={`Open ${special.dayName} specials on the calendar`}
-                    onClick={() => openDailySpecialOnCalendar(special)}
-                  >
-                    <SbCard
-                      className={cn(
-                        "h-full space-y-2 border-warning/35 bg-warning/10 p-3 transition hover:border-warning/60 hover:bg-warning/15",
-                        isTodaySpecial &&
-                          "border-warning/60 bg-warning/15 shadow-[0_0_0_1px_rgb(255_176_32_/_0.18),0_0_18px_rgb(255_176_32_/_0.14)]"
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-2">
-                          {dayVisual ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={dayVisual}
-                              alt=""
-                              aria-hidden
-                              width={32}
-                              height={32}
-                              className="size-8 shrink-0"
-                            />
-                          ) : null}
-                          <h3
-                            className={cn(
-                              "truncate text-lg font-bold uppercase tracking-wide",
-                              isTodaySpecial && "text-warning"
-                            )}
-                          >
-                            {special.dayName}
-                          </h3>
-                        </div>
-                        {isTodaySpecial ? (
-                          <SbBadge tone="warning">Tonight</SbBadge>
-                        ) : (
-                          <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                            Specials
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid gap-1">
-                        {special.items.map((item) => {
-                          const { price, label } = parseSpecialItem(item);
-
-                          return (
-                            <div
-                              key={item}
-                              className="flex items-baseline gap-1.5 rounded-sm bg-background/70 px-2 py-1"
-                            >
-                              {price ? (
-                                <span className="shrink-0 text-sm font-black tabular-nums text-warning">
-                                  {price}
-                                </span>
-                              ) : null}
-                              <span className="truncate text-xs font-semibold text-foreground">
-                                {label}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </SbCard>
-                  </button>
-                );
-              })}
-            </div>
 
             {remainingPromoCards.length > 0 ? (
               <div className="flex gap-4 overflow-x-auto pb-2">

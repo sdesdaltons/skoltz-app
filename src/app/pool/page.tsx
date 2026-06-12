@@ -21,19 +21,14 @@ export default function PoolPage() {
                 className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_70%_at_85%_0%,rgb(46_204_113_/_0.12),transparent_55%)]"
               />
               <div className="relative space-y-4">
-                <svg
-                  aria-hidden
-                  viewBox="0 0 96 56"
-                  className="h-14 w-24"
-                  fill="none"
-                >
-                  <circle cx="48" cy="12" r="9" className="fill-surface-1 stroke-warning/70" strokeWidth="2" />
-                  <circle cx="36" cy="32" r="9" className="fill-surface-1 stroke-primary/70" strokeWidth="2" />
-                  <circle cx="60" cy="32" r="9" className="fill-surface-1 stroke-accent/70" strokeWidth="2" />
-                  <circle cx="48" cy="12" r="3" className="fill-warning/70" />
-                  <circle cx="36" cy="32" r="3" className="fill-primary/70" />
-                  <circle cx="60" cy="32" r="3" className="fill-accent/70" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/visuals/pool-table.svg"
+                  alt="Illustration of a pool table with racked balls and a cue"
+                  width={640}
+                  height={360}
+                  className="w-full max-w-md rounded-lg"
+                />
                 <div className="space-y-2">
                   <SbBadge tone="success">Coming soon</SbBadge>
                   <h1 className="text-2xl font-semibold tracking-normal text-foreground">

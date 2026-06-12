@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+  <circle cx="48" cy="52" r="34" fill="#ffb020" opacity="0.16" filter="url(#g)"/>
+  <!-- back taco -->
+  <g transform="translate(8 -6) rotate(8 48 60)" opacity="0.85">
+    <path d="M22 66 a26 26 0 0 1 52 0 z" fill="#e8a14e"/>
+    <path d="M26 66 a22 22 0 0 1 44 0 z" fill="#c8531f"/>
+  </g>
+  <!-- front taco -->
+  <g transform="translate(-6 4)">
+    <path d="M20 70 a28 28 0 0 1 56 0 z" fill="#f0b35e"/>
+    <path d="M25 70 a23 23 0 0 1 46 0 z" fill="#7a4426"/>
+    <path d="M27 70 a21 21 0 0 1 42 0 z" fill="none" stroke="#5fae4e" stroke-width="5" stroke-dasharray="7 6"/>
+    <circle cx="40" cy="58" r="3" fill="#e53935"/>
+    <circle cx="54" cy="55" r="3" fill="#e53935"/>
+    <circle cx="62" cy="62" r="3" fill="#ffc24d"/>
+  </g>
+</svg>

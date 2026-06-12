@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-label="">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16161b"/>
+      <stop offset="0.6" stop-color="#101013"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </linearGradient>
+    <linearGradient id="tv" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e4dff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#16317f" stop-opacity="0.35"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="0.5" cy="0.35" r="0.65">
+      <stop offset="0" stop-color="#ffb020" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffb020" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="480" fill="url(#bg)"/>
+
+  <!-- wall glow washes -->
+  <ellipse cx="120" cy="60" rx="280" ry="170" fill="#1e4dff" opacity="0.14" filter="url(#glow)"/>
+  <ellipse cx="700" cy="80" rx="240" ry="150" fill="#e53935" opacity="0.12" filter="url(#glow)"/>
+
+  <!-- mounted TVs -->
+  <g>
+    <rect x="80" y="84" width="150" height="92" rx="6" fill="url(#tv)" stroke="#2a2a31" stroke-width="3"/>
+    <rect x="80" y="84" width="150" height="92" rx="6" fill="#1e4dff" opacity="0.25" filter="url(#glow)"/>
+    <rect x="330" y="60" width="170" height="104" rx="6" fill="url(#tv)" stroke="#2a2a31" stroke-width="3"/>
+    <rect x="330" y="60" width="170" height="104" rx="6" fill="#1e4dff" opacity="0.3" filter="url(#glow)"/>
+    <rect x="600" y="92" width="150" height="92" rx="6" fill="url(#tv)" stroke="#2a2a31" stroke-width="3"/>
+    <rect x="600" y="92" width="150" height="92" rx="6" fill="#e53935" opacity="0.18" filter="url(#glow)"/>
+    <!-- faint field lines on screens, abstract -->
+    <line x1="100" y1="150" x2="210" y2="150" stroke="#9db8ff" stroke-width="2" opacity="0.35"/>
+    <line x1="352" y1="140" x2="478" y2="140" stroke="#9db8ff" stroke-width="2" opacity="0.4"/>
+    <circle cx="415" cy="112" r="14" fill="none" stroke="#9db8ff" stroke-width="2" opacity="0.35"/>
+    <line x1="622" y1="156" x2="728" y2="156" stroke="#ffb3b0" stroke-width="2" opacity="0.3"/>
+  </g>
+
+  <!-- neon tube accents -->
+  <path d="M40 230 q 110 -46 240 -16" fill="none" stroke="#e53935" stroke-width="5" stroke-linecap="round" opacity="0.8" filter="url(#glow)"/>
+  <path d="M40 230 q 110 -46 240 -16" fill="none" stroke="#ff8a87" stroke-width="2" stroke-linecap="round"/>
+  <path d="M520 218 q 130 -36 240 6" fill="none" stroke="#1e4dff" stroke-width="5" stroke-linecap="round" opacity="0.8" filter="url(#glow)"/>
+  <path d="M520 218 q 130 -36 240 6" fill="none" stroke="#8fa9ff" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- pendant lights over the bar -->
+  <g>
+    <line x1="220" y1="0" x2="220" y2="250" stroke="#2a2a31" stroke-width="3"/>
+    <line x1="400" y1="0" x2="400" y2="236" stroke="#2a2a31" stroke-width="3"/>
+    <line x1="580" y1="0" x2="580" y2="250" stroke="#2a2a31" stroke-width="3"/>
+    <path d="M200 250 h40 l-8 -22 h-24 z" fill="#1f1f24"/>
+    <path d="M380 236 h40 l-8 -22 h-24 z" fill="#1f1f24"/>
+    <path d="M560 250 h40 l-8 -22 h-24 z" fill="#1f1f24"/>
+    <circle cx="220" cy="258" r="7" fill="#ffd47e"/>
+    <circle cx="400" cy="244" r="7" fill="#ffd47e"/>
+    <circle cx="580" cy="258" r="7" fill="#ffd47e"/>
+    <circle cx="220" cy="266" r="46" fill="url(#lamp)"/>
+    <circle cx="400" cy="252" r="46" fill="url(#lamp)"/>
+    <circle cx="580" cy="266" r="46" fill="url(#lamp)"/>
+  </g>
+
+  <!-- back bar bottle silhouettes -->
+  <g fill="#1c1c22">
+    <path d="M120 392 v-44 q0 -8 5 -12 v-14 h10 v14 q5 4 5 12 v44 z"/>
+    <path d="M152 392 v-52 q0 -8 5 -12 v-10 h10 v10 q5 4 5 12 v52 z"/>
+    <path d="M186 392 v-38 q0 -10 6 -14 v-16 h8 v16 q6 4 6 14 v38 z"/>
+    <path d="M620 392 v-44 q0 -8 5 -12 v-14 h10 v14 q5 4 5 12 v44 z"/>
+    <path d="M652 392 v-52 q0 -8 5 -12 v-10 h10 v10 q5 4 5 12 v52 z"/>
+    <path d="M686 392 v-38 q0 -10 6 -14 v-16 h8 v16 q6 4 6 14 v38 z"/>
+    <path d="M260 392 v-46 q0 -9 5 -13 v-12 h10 v12 q5 4 5 13 v46 z"/>
+    <path d="M540 392 v-46 q0 -9 5 -13 v-12 h10 v12 q5 4 5 13 v46 z"/>
+  </g>
+  <!-- bottle highlights -->
+  <g stroke-linecap="round" opacity="0.5">
+    <line x1="127" y1="356" x2="127" y2="384" stroke="#1e4dff" stroke-width="2"/>
+    <line x1="159" y1="348" x2="159" y2="384" stroke="#ffb020" stroke-width="2"/>
+    <line x1="627" y1="356" x2="627" y2="384" stroke="#e53935" stroke-width="2"/>
+    <line x1="659" y1="348" x2="659" y2="384" stroke="#ffb020" stroke-width="2"/>
+  </g>
+
+  <!-- bar counter -->
+  <rect x="0" y="392" width="800" height="14" fill="#26262d"/>
+  <rect x="0" y="406" width="800" height="74" fill="#18181d"/>
+  <rect x="0" y="392" width="800" height="4" fill="#ffb020" opacity="0.25"/>
+</svg>

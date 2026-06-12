@@ -227,6 +227,16 @@ export const foodMenuSections = [
 
 const categoryFilters = ["All", ...foodMenuSections.map((section) => section.title)] as const
 
+const categoryVisuals: Record<(typeof categoryFilters)[number], string> = {
+  All: "/assets/visuals/beer-bucket.svg",
+  Appetizers: "/assets/visuals/appetizers.svg",
+  "Burgers and Sammies": "/assets/visuals/burger.svg",
+  Breakfast: "/assets/visuals/breakfast.svg",
+  "Tacos and Nachos": "/assets/visuals/tacos.svg",
+  "Specialty Pizzas": "/assets/visuals/pizza.svg",
+  "Wings and Things": "/assets/visuals/wings.svg",
+}
+
 function WingSauceGrid() {
   return (
     <div className="space-y-2 rounded-md border border-primary/20 bg-primary/6 p-3">
@@ -323,7 +333,7 @@ export function FoodMenuGrid() {
               key={category}
               type="button"
               className={cn(
-                "min-h-16 rounded-lg border p-2.5 text-left transition-colors",
+                "relative min-h-16 overflow-hidden rounded-lg border p-2.5 pr-14 text-left transition-colors",
                 isActive
                   ? "border-warning/60 bg-warning/15 shadow-[0_0_0_1px_rgb(255_176_32_/_0.18),0_0_14px_rgb(255_176_32_/_0.12)]"
                   : "border-border bg-surface-2 hover:border-warning/40"
@@ -331,6 +341,15 @@ export function FoodMenuGrid() {
               aria-pressed={isActive}
               onClick={() => setActiveCategory(category)}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={categoryVisuals[category]}
+                alt=""
+                aria-hidden
+                width={48}
+                height={48}
+                className="pointer-events-none absolute top-1/2 right-1.5 size-12 -translate-y-1/2"
+              />
               <p
                 className={cn(
                   "text-sm font-bold leading-5",

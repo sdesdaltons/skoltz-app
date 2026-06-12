@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+  <circle cx="48" cy="52" r="34" fill="#ffb020" opacity="0.16" filter="url(#g)"/>
+  <!-- skillet -->
+  <circle cx="44" cy="54" r="28" fill="#2e2e36"/>
+  <circle cx="44" cy="54" r="23" fill="#3a3a44"/>
+  <rect x="70" y="50" width="22" height="8" rx="4" fill="#2e2e36"/>
+  <!-- fried egg -->
+  <path d="M32 44 q10 -8 20 -2 q10 6 6 16 q-4 10 -16 8 q-12 -2 -14 -10 q-2 -8 4 -12 z" fill="#f7f3ea"/>
+  <circle cx="42" cy="52" r="7" fill="#ffc24d"/>
+  <circle cx="40" cy="50" r="2" fill="#ffe2a3"/>
+  <!-- bacon -->
+  <g transform="rotate(-24 62 66)">
+    <path d="M52 62 q5 -4 10 0 q5 4 10 0 v8 q-5 4 -10 0 q-5 -4 -10 0 z" fill="#b03a2e"/>
+    <path d="M54 65 q4 -3 8 0 q4 3 8 0" fill="none" stroke="#f3e2c7" stroke-width="2"/>
+  </g>
+  <!-- steam -->
+  <g stroke="#cccccc" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7">
+    <path d="M36 20 q4 -5 0 -10"/>
+    <path d="M52 18 q4 -5 0 -10"/>
+  </g>
+</svg>

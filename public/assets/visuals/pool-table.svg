@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+    <radialGradient id="felt" cx="0.5" cy="0.4" r="0.9">
+      <stop offset="0" stop-color="#1d6b46"/>
+      <stop offset="1" stop-color="#134731"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ambient glows -->
+  <ellipse cx="120" cy="50" rx="200" ry="110" fill="#1e4dff" opacity="0.12" filter="url(#glow)"/>
+  <ellipse cx="540" cy="60" rx="180" ry="100" fill="#e53935" opacity="0.10" filter="url(#glow)"/>
+
+  <!-- table -->
+  <rect x="70" y="60" width="500" height="250" rx="26" fill="#5a3a22"/>
+  <rect x="92" y="82" width="456" height="206" rx="14" fill="url(#felt)"/>
+  <!-- pockets -->
+  <g fill="#0b0b0d">
+    <circle cx="98" cy="88" r="13"/>
+    <circle cx="320" cy="84" r="11"/>
+    <circle cx="542" cy="88" r="13"/>
+    <circle cx="98" cy="282" r="13"/>
+    <circle cx="320" cy="286" r="11"/>
+    <circle cx="542" cy="282" r="13"/>
+  </g>
+  <!-- amber lamp light pool -->
+  <ellipse cx="320" cy="185" rx="170" ry="80" fill="#ffb020" opacity="0.10" filter="url(#glow)"/>
+
+  <!-- racked balls -->
+  <g>
+    <circle cx="394" cy="185" r="13" fill="#ffc24d"/>
+    <circle cx="418" cy="171" r="13" fill="#1e4dff"/>
+    <circle cx="418" cy="199" r="13" fill="#e53935"/>
+    <circle cx="442" cy="157" r="13" fill="#e53935"/>
+    <circle cx="442" cy="185" r="13" fill="#16161b" stroke="#3a3a44" stroke-width="2"/>
+    <circle cx="442" cy="213" r="13" fill="#1e4dff"/>
+    <!-- stripes -->
+    <rect x="431" y="151" width="22" height="11" rx="5.5" fill="#f2f2f2" opacity="0.9" transform="rotate(0 442 157)"/>
+    <circle cx="394" cy="180" r="3.5" fill="#f2f2f2"/>
+    <circle cx="418" cy="166" r="3.5" fill="#f2f2f2"/>
+  </g>
+
+  <!-- cue ball + cue -->
+  <circle cx="206" cy="196" r="13" fill="#f2f2f2"/>
+  <g transform="rotate(-9 206 196)">
+    <rect x="60" y="206" width="130" height="7" rx="3.5" fill="#c89055"/>
+    <rect x="52" y="206" width="14" height="7" rx="3.5" fill="#1e4dff"/>
+  </g>
+
+  <!-- motion line -->
+  <path d="M226 192 q60 -6 130 -4" fill="none" stroke="#f2f2f2" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round" opacity="0.5"/>
+</svg>

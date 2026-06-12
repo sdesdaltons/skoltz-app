@@ -30,7 +30,7 @@ const eventLabels: Partial<Record<SbEventKind, string>> = {
   nba: "NBA Playoffs",
   nfl: "NFL Playoffs",
   special: "Special",
-  karaoke: "Karaoke",
+  karaoke: "Karaoke with Tha Best Sound In Town",
 }
 
 export function SbEventIndicator({

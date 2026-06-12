@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Share, SquarePlus } from "lucide-react"
 
 import { SbLogo } from "@/components/branding"
 import { SbButton, SbCard } from "@/components/ui"
@@ -17,21 +18,21 @@ const installDismissDurationMs = 24 * 60 * 60 * 1000
 const isDevelopment = process.env.NODE_ENV === "development"
 
 function isInstallDismissed() {
-  const dismissedUntil = localStorage.getItem(installDismissedKey)
+  const dismissedUntil = getStoredDismissedUntil()
 
   if (!dismissedUntil) {
     return false
   }
 
   if (dismissedUntil === "true") {
-    localStorage.removeItem(installDismissedKey)
+    removeStoredDismissedUntil()
     return false
   }
 
   const dismissedUntilTime = Number(dismissedUntil)
 
   if (!Number.isFinite(dismissedUntilTime) || dismissedUntilTime <= Date.now()) {
-    localStorage.removeItem(installDismissedKey)
+    removeStoredDismissedUntil()
     return false
   }
 
@@ -39,10 +40,31 @@ function isInstallDismissed() {
 }
 
 function dismissInstallPrompt() {
-  localStorage.setItem(
-    installDismissedKey,
-    String(Date.now() + installDismissDurationMs)
-  )
+  setStoredDismissedUntil(String(Date.now() + installDismissDurationMs))
+}
+
+function getStoredDismissedUntil() {
+  try {
+    return window.localStorage.getItem(installDismissedKey)
+  } catch {
+    return null
+  }
+}
+
+function setStoredDismissedUntil(value: string) {
+  try {
+    window.localStorage.setItem(installDismissedKey, value)
+  } catch {
+    // If storage is unavailable, dismiss for the current page session only.
+  }
+}
+
+function removeStoredDismissedUntil() {
+  try {
+    window.localStorage.removeItem(installDismissedKey)
+  } catch {
+    // Storage can be blocked in some Safari privacy modes.
+  }
 }
 
 function isStandaloneDisplay() {
@@ -166,9 +188,21 @@ export function PwaInstallBanner() {
           </h2>
           <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
             {isIosGuidance
-              ? "Tap Share, then Add to Home Screen for faster access at the bar."
+              ? "On iPhone, tap Share, then Add to Home Screen."
               : "Add Skoltz to your home screen for faster access at the bar."}
           </p>
+          {isIosGuidance ? (
+            <div className="flex flex-wrap gap-2 pt-1 text-xs font-semibold text-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1">
+                <Share className="size-3.5" aria-hidden="true" />
+                Share
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1">
+                <SquarePlus className="size-3.5" aria-hidden="true" />
+                Add to Home Screen
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="flex gap-2">

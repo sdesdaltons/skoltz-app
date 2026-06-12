@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query"
 
 import { queryKeys } from "@/lib/queryKeys"
 import {
+  businessDateKey,
+  dateKey,
+  getBusinessDate,
+  startOfBusinessDay,
+} from "@/lib/business-date"
+import {
   createSupabaseBrowserClient,
   hasSupabaseConfig,
 } from "@/lib/supabase/client"
@@ -17,6 +23,9 @@ import { type EventCategory, type RawEvent, type UIEvent } from "./types"
 const eventStaleTime = 5 * 60 * 1000
 const liveEventRefetchInterval = 60 * 1000
 const upcomingSportsWindowDays = 45
+const fridayKaraokeTitle = "Friday Karaoke with Tha Best Sound In Town at Skoltz"
+const fridayKaraokeDescription =
+  "Friday drink specials are on during karaoke at Skoltz."
 const venueTimeZone = "America/Chicago"
 const venueWeekdayFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: venueTimeZone,
@@ -101,13 +110,66 @@ async function readSourceBackedSportsEvents(
   )
 }
 
+function getFridayKaraokeEvents(
+  startDate: Date,
+  endDate: Date,
+  existingEvents: RawEvent[]
+): RawEvent[] {
+  const existingKaraokeDates = new Set(
+    existingEvents
+      .filter((event) => event.categories.includes("karaoke"))
+      .map((event) => businessDateKey(new Date(event.startTime)))
+  )
+  const firstFriday = new Date(startDate)
+  const daysUntilFriday = (5 - firstFriday.getDay() + 7) % 7
+  const karaokeEvents: RawEvent[] = []
+
+  firstFriday.setDate(firstFriday.getDate() + daysUntilFriday)
+
+  for (
+    const karaokeDate = new Date(firstFriday);
+    karaokeDate < endDate;
+    karaokeDate.setDate(karaokeDate.getDate() + 7)
+  ) {
+    const key = dateKey(karaokeDate)
+
+    if (existingKaraokeDates.has(key)) {
+      continue
+    }
+
+    const startTime = new Date(karaokeDate)
+    const endTime = new Date(karaokeDate)
+
+    startTime.setHours(21, 30, 0, 0)
+    endTime.setDate(karaokeDate.getDate() + 1)
+    endTime.setHours(1, 30, 0, 0)
+
+    karaokeEvents.push({
+      id: `recurring-friday-karaoke-${key}`,
+      title: fridayKaraokeTitle,
+      description: fridayKaraokeDescription,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      categories: ["karaoke"],
+      location: "Skoltz",
+    })
+  }
+
+  return karaokeEvents
+}
+
 async function readEvents(startDate: Date, endDate: Date): Promise<RawEvent[]> {
   const [venueEvents, sportsEvents] = await Promise.all([
     readVenueEvents(),
     readSourceBackedSportsEvents(startDate, endDate),
   ])
+  const recurringKaraokeEvents = getFridayKaraokeEvents(
+    startDate,
+    endDate,
+    venueEvents
+  )
 
-  return [...venueEvents, ...sportsEvents]
+  return [...venueEvents, ...recurringKaraokeEvents, ...sportsEvents]
 }
 
 function isPublicEvent(rawEvent: RawEvent) {
@@ -142,16 +204,12 @@ function monthKey(month: Date) {
 }
 
 function isInMonth(event: UIEvent, month: Date) {
+  const businessDate = getBusinessDate(event.startTime)
+
   return (
-    event.startTime.getFullYear() === month.getFullYear() &&
-    event.startTime.getMonth() === month.getMonth()
+    businessDate.getFullYear() === month.getFullYear() &&
+    businessDate.getMonth() === month.getMonth()
   )
-}
-
-function startOfToday() {
-  const today = new Date()
-
-  return new Date(today.getFullYear(), today.getMonth(), today.getDate())
 }
 
 function addDays(date: Date, days: number) {
@@ -174,7 +232,7 @@ export function useUpcomingEvents() {
   return useQuery({
     queryKey: queryKeys.events.upcoming,
     queryFn: async () => {
-      const startDate = startOfToday()
+      const startDate = startOfBusinessDay(new Date())
       const endDate = addDays(startDate, upcomingSportsWindowDays)
       const rawEvents = await readEvents(startDate, endDate)
       const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter(
@@ -195,7 +253,10 @@ export function useCalendarEvents(month: Date) {
   return useQuery({
     queryKey: queryKeys.events.calendar(monthKey(month)),
     queryFn: async () => {
-      const rawEvents = await readEvents(startOfMonth(month), endOfMonth(month))
+      const rawEvents = await readEvents(
+        startOfBusinessDay(startOfMonth(month)),
+        addDays(endOfMonth(month), 1)
+      )
       const events = adaptRawEvents(rawEvents.filter(isPublicEvent)).filter((event) =>
         isInMonth(event, month)
       )

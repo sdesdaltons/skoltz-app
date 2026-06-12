@@ -19,7 +19,7 @@ This checklist prepares Skoltz for Supabase enforcement validation and Vercel pr
 9. Run the seed script.
 10. Confirm starter rows exist for:
     - Astros event
-    - karaoke event
+    - Karaoke with Tha Best Sound In Town event
     - pool event
     - Astros sports game
     - 3 rewards

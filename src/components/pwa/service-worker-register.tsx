@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 
 const isDevelopment = process.env.NODE_ENV === "development"
+let isRefreshingServiceWorker = false
 
 export function ServiceWorkerRegister() {
   useEffect(() => {
@@ -18,6 +19,8 @@ export function ServiceWorkerRegister() {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
+          void registration.update()
+
           if (isDevelopment) {
             console.debug("[Skoltz PWA] service worker registered", registration.scope)
           }
@@ -28,6 +31,15 @@ export function ServiceWorkerRegister() {
           }
         })
     }
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (isRefreshingServiceWorker) {
+        return
+      }
+
+      isRefreshingServiceWorker = true
+      window.location.reload()
+    })
 
     if (document.readyState === "complete") {
       registerServiceWorker()

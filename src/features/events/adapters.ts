@@ -4,6 +4,7 @@ import {
   type RawEvent,
   type UIEvent,
 } from "./types"
+import { businessDateKey } from "@/lib/business-date"
 
 const categoryLabels: Record<EventCategory, string> = {
   astros: "Astros",
@@ -12,7 +13,7 @@ const categoryLabels: Record<EventCategory, string> = {
   mlb: "MLB Playoffs",
   nba: "NBA Playoffs",
   nfl: "NFL Playoffs",
-  karaoke: "Karaoke",
+  karaoke: "Karaoke with Tha Best Sound In Town",
   pool: "Event",
 }
 
@@ -27,19 +28,19 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 })
 
-function dateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-
-  return `${year}-${month}-${day}`
-}
-
 function normalizeCategories(categories: EventCategory[]): EventCategoryInfo[] {
   return categories.map((category) => ({
     value: category,
     label: categoryLabels[category],
   }))
+}
+
+function normalizeEventTitle(rawEvent: RawEvent) {
+  if (rawEvent.categories.includes("karaoke")) {
+    return rawEvent.title.replace(/\bNext\s+Friday\s+Karaoke\b/gi, "Friday Karaoke")
+  }
+
+  return rawEvent.title
 }
 
 export function adaptRawEvent(rawEvent: RawEvent): UIEvent {
@@ -49,7 +50,7 @@ export function adaptRawEvent(rawEvent: RawEvent): UIEvent {
 
   return {
     id: rawEvent.id,
-    title: rawEvent.title,
+    title: normalizeEventTitle(rawEvent),
     description: rawEvent.description,
     startTime,
     endTime,
@@ -77,7 +78,7 @@ export function groupUIEventsByDate(
   events: UIEvent[]
 ): Record<string, UIEvent[]> {
   return events.reduce<Record<string, UIEvent[]>>((groupedEvents, event) => {
-    const key = dateKey(event.startTime)
+    const key = businessDateKey(event.startTime)
 
     groupedEvents[key] = [...(groupedEvents[key] ?? []), event]
 

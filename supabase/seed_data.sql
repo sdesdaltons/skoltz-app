@@ -17,15 +17,15 @@ where
     and extract(isodow from start_time at time zone 'America/Chicago') <> 5
   )
   or title in (
-    'Karaoke kickoff night',
-    'Karaoke late night',
-    'Karaoke night',
-    'Karaoke Thursday',
-    'Karaoke first Thursday',
-    'Friday karaoke kickoff',
-    'Astros Friday karaoke',
-    'Friday karaoke night',
-    'First Friday karaoke',
+    'Karaoke with Tha Best Sound In Town kickoff night',
+    'Karaoke with Tha Best Sound In Town late night',
+    'Karaoke with Tha Best Sound In Town night',
+    'Karaoke with Tha Best Sound In Town Thursday',
+    'Karaoke with Tha Best Sound In Town first Thursday',
+    'Friday Karaoke with Tha Best Sound In Town kickoff',
+    'Astros Friday Karaoke with Tha Best Sound In Town',
+    'Friday Karaoke with Tha Best Sound In Town night',
+    'First Friday Karaoke with Tha Best Sound In Town',
     'Friday pool tournament',
     'Saturday pool challenge',
     'Pool doubles night',
@@ -45,8 +45,8 @@ where
     'Astros road game watch',
     'Astros homestand night',
     'Astros Sunday baseball',
-    'Friday karaoke at Skoltz',
-    'Next Friday karaoke',
+    'Friday Karaoke with Tha Best Sound In Town at Skoltz',
+    'Next Friday Karaoke with Tha Best Sound In Town',
     'Rockets watch party',
     'Texans fan night'
   );
@@ -95,24 +95,24 @@ seed as (
   cross join lateral (
     values
       (
-        'Friday karaoke at Skoltz',
-        'Friday karaoke on the Skoltz stage.',
+        'Friday Karaoke with Tha Best Sound In Town at Skoltz',
+        'Friday drink specials are on during karaoke at Skoltz.',
         schedule.next_friday,
         time '21:30',
         schedule.next_friday + 1,
         time '01:30',
         array['karaoke']::text[],
-        'Skoltz stage'
+        'Skoltz'
       ),
       (
-        'Next Friday karaoke',
-        'Friday karaoke with drink specials.',
+        'Friday Karaoke with Tha Best Sound In Town at Skoltz',
+        'Friday drink specials are on during karaoke at Skoltz.',
         schedule.next_friday + 7,
         time '21:30',
         schedule.next_friday + 8,
         time '01:30',
         array['karaoke']::text[],
-        'Skoltz stage'
+        'Skoltz'
       )
   ) as v(title, description, start_date, start_time, end_date, end_time, categories, location)
 )
@@ -133,7 +133,12 @@ select
   seed.location
 from seed
 where not exists (
-  select 1 from public.events where public.events.title = seed.title
+  select 1
+  from public.events
+  where
+    public.events.start_time = seed.start_time
+    and public.events.end_time = seed.end_time
+    and public.events.categories = seed.categories
 );
 
 insert into public.rewards (

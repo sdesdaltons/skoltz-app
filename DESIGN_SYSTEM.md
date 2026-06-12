@@ -34,7 +34,7 @@ Use tokens and Tailwind theme variables instead of hardcoded colors in component
 | `--sb-text` | `#F2F2F2` | Primary text |
 | `--sb-text-muted` | `#CCCCCC` | Secondary text and metadata |
 | `--sb-success` | `#2ECC71` | Positive status, pool indicators |
-| `--sb-warning` | `#FFB020` | Warning, karaoke indicators, offline banner |
+| `--sb-warning` | `#FFB020` | Warning, Karaoke with Tha Best Sound In Town indicators, offline banner |
 | `--sb-error` | `#FF4D4F` | Errors and destructive feedback |
 
 Color usage rules:
@@ -216,7 +216,7 @@ Current `SbBadge` tones:
 | `blue` | Astros, primary category, info |
 | `red` | Error, Rockets/red sports accent |
 | `success` | Pool or positive status |
-| `warning` | Karaoke, warning, offline |
+| `warning` | Karaoke with Tha Best Sound In Town, warning, offline |
 | `neutral` | Metadata, featured label, low-emphasis state |
 
 Rules:
@@ -250,7 +250,7 @@ Event indicator mapping:
 - Astros: blue dot
 - Rockets: red dot
 - Texans: blue dot with red ring
-- Karaoke: warning dot
+- Karaoke with Tha Best Sound In Town: warning dot
 - Pool: success dot
 
 ## Navigation Styling

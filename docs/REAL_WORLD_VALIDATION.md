@@ -57,7 +57,7 @@ Blocked pending Supabase SQL execution and Vercel preview deployment.
 Items still requiring deployed-app verification:
 
 - Astros event appears.
-- karaoke event appears.
+- Karaoke with Tha Best Sound In Town event appears.
 - pool event appears.
 - rewards list appears.
 

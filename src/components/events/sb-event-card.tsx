@@ -24,7 +24,7 @@ const categoryLabel: Partial<Record<SbEventKind, string>> = {
   mlb: "MLB Playoffs",
   nba: "NBA Playoffs",
   nfl: "NFL Playoffs",
-  karaoke: "Karaoke",
+  karaoke: "Karaoke with Tha Best Sound In Town",
 }
 
 export function SbEventCard({

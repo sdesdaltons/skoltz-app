@@ -6,15 +6,16 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 type NavItem = {
-  label: "Today" | "This Week" | "This Month" | "Menu"
+  label: "Today" | "This Week" | "This Month" | "Pool" | "Menu"
   href: string
-  icon: "today" | "week" | "month" | "menu"
+  icon: "today" | "week" | "month" | "pool" | "menu"
 }
 
 const navItems: NavItem[] = [
   { label: "Today", href: "/", icon: "today" },
   { label: "This Week", href: "/#this-week", icon: "week" },
   { label: "This Month", href: "/#calendar", icon: "month" },
+  { label: "Pool", href: "/pool", icon: "pool" },
   { label: "Menu", href: "/menu", icon: "menu" },
 ]
 
@@ -72,6 +73,17 @@ function NavIcon({ icon }: { icon: NavItem["icon"] }) {
     )
   }
 
+  if (icon === "pool") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="8" cy="8" r="3" />
+        <circle cx="16" cy="16" r="3" />
+        <path d="M14 5l5 5" />
+        <path d="M5 14l5 5" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...commonProps}>
       <path d="M7 5h10" />
@@ -100,6 +112,10 @@ export function SbBottomNav({
     function resolveActiveItem(calendarInView = false): NavItem["label"] | null {
       if (pathname === "/menu") {
         return "Menu"
+      }
+
+      if (pathname === "/pool") {
+        return "Pool"
       }
 
       if (pathname === "/") {
@@ -179,7 +195,7 @@ export function SbBottomNav({
         className
       )}
     >
-      <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-2xl grid-cols-5 gap-1">
         {navItems.map((item) => {
           const isActive = item.label === effectiveActive
 
@@ -188,11 +204,18 @@ export function SbBottomNav({
               key={item.label}
               href={item.href}
               className={cn(
-                "flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[0.625rem] font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                isActive && "bg-primary/10 text-primary"
+                "relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[0.625rem] font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isActive && "bg-primary/15 text-primary"
               )}
               aria-current={isActive ? "page" : undefined}
             >
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute top-0 h-0.5 w-7 rounded-full bg-transparent transition-colors",
+                  isActive && "bg-primary shadow-[0_0_8px_rgb(30_77_255_/_0.6)]"
+                )}
+              />
               <NavIcon icon={item.icon} />
               <span>{item.label}</span>
             </a>

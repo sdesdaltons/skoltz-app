@@ -258,20 +258,26 @@ function FoodMenuCard({ section }: { section: FoodMenuSection }) {
 
   return (
     <SbCard className="h-full space-y-3 border-border/70 bg-surface-2 p-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 border-b border-warning/25 pb-2">
         <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
-        <SbBadge tone="neutral">Menu</SbBadge>
+        <SbBadge tone="neutral">{section.items.length} items</SbBadge>
       </div>
 
-      <div className="divide-y divide-border/70">
+      <div className="divide-y divide-border/50">
         {section.items.map((item) => (
           <div key={item.name} className="py-2 first:pt-0 last:pb-0">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-baseline gap-2">
               <p className="text-sm font-semibold text-foreground">{item.name}</p>
               {item.price ? (
-                <p className="shrink-0 text-sm font-semibold tabular-nums text-primary">
-                  {item.price}
-                </p>
+                <>
+                  <span
+                    aria-hidden
+                    className="min-w-4 flex-1 border-b border-dotted border-border/80"
+                  />
+                  <p className="shrink-0 text-sm font-semibold tabular-nums text-warning">
+                    {item.price}
+                  </p>
+                </>
               ) : null}
             </div>
             {item.description ? (

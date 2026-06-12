@@ -21,11 +21,15 @@ export function SbSectionHeader({
       )}
     >
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-normal sm:text-3xl">
+        <h2 className="flex items-center gap-2.5 text-2xl font-semibold tracking-normal sm:text-3xl">
+          <span
+            aria-hidden
+            className="h-6 w-1 shrink-0 rounded-full bg-gradient-to-b from-primary to-accent"
+          />
           {title}
         </h2>
         {subtitle ? (
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+          <p className="max-w-2xl pl-3.5 text-sm leading-6 text-muted-foreground">
             {subtitle}
           </p>
         ) : null}

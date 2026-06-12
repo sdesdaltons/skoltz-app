@@ -26,6 +26,12 @@ import {
 import { cn } from "@/lib/utils";
 import crawfishPromo from "../../Ads/facebook_1778893673441_7461220850091226236.jpg";
 import dartTournamentPromo from "../../Ads/image000000.jpg";
+import {
+  businessDateKey,
+  dateKey,
+  getBusinessDate,
+  startOfDay,
+} from "@/lib/business-date";
 
 type CalendarFilter = "sports" | "specials" | "featured";
 
@@ -40,11 +46,19 @@ type PromoCard = {
     | {
         type: "weekly";
         day: number;
+        endTime?: {
+          hour: number;
+          minute?: number;
+        };
       }
     | {
         type: "date";
         month: number;
         day: number;
+        endTime?: {
+          hour: number;
+          minute?: number;
+        };
       };
 };
 
@@ -159,7 +173,7 @@ function getDailySpecialForDate(date: Date) {
 }
 
 function formatHeroSpecials(date: Date) {
-  const special = getDailySpecialForDate(date);
+  const special = getDailySpecialForDate(getBusinessDate(date));
 
   if (!special) {
     return "tonight's specials";
@@ -174,7 +188,12 @@ const karaokeStartHour = 21;
 const karaokeStartMinute = 30;
 const karaokeEndHour = 1;
 const karaokeEndMinute = 30;
+const karaokePromoVideoSrc = "/karaoke-friday-promo.mp4";
 const homepageUpcomingLimit = 10;
+const fridayKaraokeCalendarTitle =
+  "Friday Karaoke with Tha Best Sound In Town";
+const fridayKaraokeCalendarDescription =
+  "Friday drink specials are on during karaoke at Skoltz.";
 
 const calendarFilters: Array<{ value: CalendarFilter; label: string }> = [
   { value: "sports", label: "Sports" },
@@ -246,18 +265,6 @@ function categoryPriority(category: UIEvent["primaryCategory"]) {
   return 5;
 }
 
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
 function getPromoSortDate(promo: PromoCard, currentDate: Date) {
   const todayStart = startOfDay(currentDate);
 
@@ -294,6 +301,47 @@ function sortPromoCardsByDate(promos: PromoCard[], currentDate: Date) {
       getPromoSortDate(firstPromo, currentDate).getTime() -
       getPromoSortDate(secondPromo, currentDate).getTime()
   );
+}
+
+function isPromoFeaturedToday(promo: PromoCard, currentDate: Date) {
+  const occursToday =
+    promo.schedule.type === "weekly"
+      ? promo.schedule.day === currentDate.getDay()
+      : promo.schedule.month === currentDate.getMonth() &&
+        promo.schedule.day === currentDate.getDate();
+
+  if (!occursToday) {
+    return false;
+  }
+
+  if (!promo.schedule.endTime) {
+    return true;
+  }
+
+  const promoEnd = startOfDay(currentDate);
+
+  promoEnd.setHours(
+    promo.schedule.endTime.hour,
+    promo.schedule.endTime.minute ?? 0,
+    0,
+    0
+  );
+
+  return currentDate < promoEnd;
+}
+
+function formatFeaturedPromoMention(promos: PromoCard[]) {
+  if (promos.length === 0) {
+    return undefined;
+  }
+
+  if (promos.length === 1) {
+    const [promo] = promos;
+
+    return `${promo.title} today: ${promo.details}`;
+  }
+
+  return `Featured today: ${promos.map((promo) => promo.title).join(", ")}.`;
 }
 
 function sortDailySpecialsForWeek(
@@ -457,6 +505,56 @@ function getDailySpecialCalendarEventsForMonth(
   );
 }
 
+function getFridayKaraokeCalendarEventsForMonth(
+  month: Date,
+  existingEventsByDate: Record<string, SbCalendarEvent[]>
+): Record<string, SbCalendarEvent[]> {
+  const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+  const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const firstFriday = new Date(monthStart);
+  const daysUntilFriday = (5 - firstFriday.getDay() + 7) % 7;
+  const karaokeEvents: Array<{ date: Date; event: SbCalendarEvent }> = [];
+
+  firstFriday.setDate(firstFriday.getDate() + daysUntilFriday);
+
+  for (
+    const karaokeDate = new Date(firstFriday);
+    karaokeDate <= monthEnd;
+    karaokeDate.setDate(karaokeDate.getDate() + 7)
+  ) {
+    const key = dateKey(karaokeDate);
+    const alreadyHasKaraoke = existingEventsByDate[key]?.some(
+      (event) => event.kind === "karaoke"
+    );
+
+    if (alreadyHasKaraoke) {
+      continue;
+    }
+
+    karaokeEvents.push({
+      date: new Date(karaokeDate),
+      event: {
+        id: `recurring-friday-karaoke-${key}`,
+        title: fridayKaraokeCalendarTitle,
+        kind: "karaoke",
+        time: "9:30 PM - 1:30 AM",
+        description: fridayKaraokeCalendarDescription,
+      },
+    });
+  }
+
+  return karaokeEvents.reduce<Record<string, SbCalendarEvent[]>>(
+    (groupedKaraoke, karaoke) => {
+      const key = dateKey(karaoke.date);
+
+      groupedKaraoke[key] = [...(groupedKaraoke[key] ?? []), karaoke.event];
+
+      return groupedKaraoke;
+    },
+    {}
+  );
+}
+
 function mergeCalendarEvents(
   eventCalendarItems: Record<string, SbCalendarEvent[]>,
   promoCalendarItems: Record<string, SbCalendarEvent[]>
@@ -520,17 +618,17 @@ function filterCalendarEvents(
 
 function eventOccursOnDate(event: UIEvent, targetDateKey: string) {
   return (
-    dateKey(event.startTime) === targetDateKey ||
-    dateKey(event.endTime) === targetDateKey
+    businessDateKey(event.startTime) === targetDateKey ||
+    businessDateKey(event.endTime) === targetDateKey
   );
 }
 
 function isFriday(date: Date) {
-  return date.getDay() === 5;
+  return getBusinessDate(date).getDay() === 5;
 }
 
 function isFridayNightWindow(date: Date) {
-  return isFriday(date) || (date.getDay() === 6 && date.getHours() < 4);
+  return isFriday(date);
 }
 
 function isScheduledKaraokeActive(date: Date) {
@@ -573,7 +671,7 @@ function isStartingSoonEvent(event: UIEvent, currentTime: Date) {
 function isFutureTonightEvent(event: UIEvent, currentTime: Date) {
   return (
     isFutureEvent(event, currentTime) &&
-    eventOccursOnDate(event, dateKey(currentTime))
+    eventOccursOnDate(event, businessDateKey(currentTime))
   );
 }
 
@@ -582,14 +680,14 @@ function isCurrentOrFutureEvent(event: UIEvent, currentTime: Date) {
 }
 
 function isSameNightEvent(event: UIEvent, currentTime: Date) {
-  const currentDateKey = dateKey(currentTime);
+  const currentDateKey = businessDateKey(currentTime);
   const tomorrow = new Date(currentTime);
 
   tomorrow.setDate(currentTime.getDate() + 1);
 
   const isLateNightCarryover =
     event.startTime.getHours() < tonightWindowEndHour &&
-    dateKey(event.startTime) === dateKey(tomorrow);
+    businessDateKey(event.startTime) === businessDateKey(tomorrow);
 
   return eventOccursOnDate(event, currentDateKey) || isLateNightCarryover;
 }
@@ -625,15 +723,6 @@ function sortEventsByLifecyclePriority(events: UIEvent[]) {
   );
 }
 
-function sortEventsByFuturePriority(events: UIEvent[]) {
-  return [...events].sort(
-    (firstEvent, secondEvent) =>
-      firstEvent.startTime.getTime() - secondEvent.startTime.getTime() ||
-      categoryPriority(firstEvent.primaryCategory) -
-        categoryPriority(secondEvent.primaryCategory)
-  );
-}
-
 function selectFocalEvent(events: UIEvent[], currentTime: Date) {
   const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
   const startingSoonEvents = sortEventsByLifecyclePriority(
@@ -656,16 +745,12 @@ function selectFocalEvent(events: UIEvent[], currentTime: Date) {
         isSameNightEvent(event, currentTime)
     )
   );
-  const futureEvents = sortEventsByFuturePriority(
-    events.filter((event) => isFutureEvent(event, currentTime))
-  );
 
   return (
     startingSoonEvents[0] ??
     fridayKaraokeEvent ??
     ongoingEvents[0] ??
-    futureTonightEvents[0] ??
-    futureEvents[0]
+    futureTonightEvents[0]
   );
 }
 
@@ -855,10 +940,6 @@ function CompactEventCard({
 }) {
   const statusLabel = getFocalStatusLabel(event, currentTime);
   const showStatus = statusLabel !== "Featured";
-  const isFridayKaraoke =
-    isFridayNightWindow(currentTime) &&
-    isKaraokeEvent(event) &&
-    isSameNightEvent(event, currentTime);
   const sourceUrl = isSourceLinkedSportsEvent(event) ? event.sourceUrl : undefined;
 
   if (isLiveScoreEvent(event)) {
@@ -880,9 +961,6 @@ function CompactEventCard({
               {category.label}
             </SbBadge>
           ))}
-          {isFridayKaraoke ? (
-            <SbBadge tone="warning">Friday feature</SbBadge>
-          ) : null}
           {showStatus ? <SbBadge tone="blue">{statusLabel}</SbBadge> : null}
         </div>
 
@@ -931,6 +1009,9 @@ function FocalEventCard({
     isFridayNightWindow(currentTime) &&
     isKaraokeEvent(event) &&
     isSameNightEvent(event, currentTime);
+  const focalDescription = isFridayKaraoke
+    ? `${formatHeroSpecials(event.startTime)}. Karaoke runs 9:30 PM to 1:30 AM.`
+    : event.description;
   const sourceUrl = isSourceLinkedSportsEvent(event) ? event.sourceUrl : undefined;
 
   if (event.isAstros) {
@@ -979,10 +1060,7 @@ function FocalEventCard({
           </SbBadge>
         ))}
         {isFridayKaraoke ? (
-          <>
-            <SbBadge tone="warning">Friday feature</SbBadge>
-            <SbBadge tone="warning">Live karaoke</SbBadge>
-          </>
+          <SbBadge tone="warning">Friday drink specials</SbBadge>
         ) : null}
         <SbBadge tone="blue">{getFocalStatusLabel(event, currentTime)}</SbBadge>
       </div>
@@ -995,9 +1073,24 @@ function FocalEventCard({
           {event.title}
         </h2>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          {event.description}
+          {focalDescription}
         </p>
       </div>
+
+      {isFridayKaraoke ? (
+        <video
+          aria-label="Karaoke with Tha Best Sound In Town promo"
+          autoPlay
+          controls
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          className="block h-auto w-full overflow-hidden rounded-md border border-warning/35 bg-background"
+        >
+          <source src={karaokePromoVideoSrc} type="video/mp4" />
+        </video>
+      ) : null}
 
       <SbButton
         asChild
@@ -1075,7 +1168,7 @@ function getHeroDescription({
     isScheduledKaraokeActive(currentTime) &&
     (!fridayKaraokeEvent || isOngoingEvent(fridayKaraokeEvent, currentTime))
   ) {
-    return "Friday Karaoke is happening now at Skoltz until 1:30 AM.";
+    return "Friday Karaoke with Tha Best Sound In Town is happening now at Skoltz until 1:30 AM.";
   }
 
   if (fridayKaraokeEvent) {
@@ -1084,14 +1177,14 @@ function getHeroDescription({
     );
 
     if (isOngoingEvent(fridayKaraokeEvent, currentTime)) {
-      return "Friday Karaoke is happening now at Skoltz.";
+      return "Friday Karaoke with Tha Best Sound In Town is happening now at Skoltz.";
     }
 
     if (isStartingSoonEvent(fridayKaraokeEvent, currentTime)) {
-      return `Friday Karaoke starts at ${karaokeStart}. Drinks, songs, and specials are on tonight.`;
+      return `Friday Karaoke with Tha Best Sound In Town starts at ${karaokeStart}. Drinks, songs, and specials are on tonight.`;
     }
 
-    return `Friday Karaoke starts at ${karaokeStart}. Games and specials are still on around the bar.`;
+    return `Friday Karaoke with Tha Best Sound In Town starts at ${karaokeStart}. Games and specials are still on around the bar.`;
   }
 
   if (focalEvent && isSameNightEvent(focalEvent, currentTime)) {
@@ -1117,7 +1210,7 @@ function getHeroDescription({
   }
 
   if (isFridayNightWindow(currentTime)) {
-    return "Friday Karaoke takes over tonight at Skoltz. Cold drinks, songs, and specials are waiting.";
+    return "Friday Karaoke with Tha Best Sound In Town takes over tonight at Skoltz. Cold drinks, songs, and specials are waiting.";
   }
 
   return "Catch tonight's games, events, and specials before you get to the bar.";
@@ -1132,7 +1225,8 @@ export default function Home() {
   const [activeCalendarFilters, setActiveCalendarFilters] = useState<
     CalendarFilter[]
   >([]);
-  const today = currentDate ?? new Date();
+  const currentTime = currentDate ?? new Date();
+  const today = getBusinessDate(currentTime);
   const currentCalendarMonth = new Date(
     today.getFullYear(),
     today.getMonth(),
@@ -1238,12 +1332,12 @@ export default function Home() {
 
   const queryEvents = upcomingQuery.data ?? [];
   const events = queryEvents;
-  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, today);
-  const focalEvent = selectFocalEvent(events, today);
+  const fridayKaraokeEvent = selectFridayKaraokeEvent(events, currentTime);
+  const focalEvent = selectFocalEvent(events, currentTime);
   const ongoingEvents = sortEventsByStartTime(
     events.filter(
       (event) =>
-        isOngoingEvent(event, today) && event.id !== focalEvent?.id
+        isOngoingEvent(event, currentTime) && event.id !== focalEvent?.id
     )
   );
   const todayLabel = sameDayLabelFormatter.format(today);
@@ -1252,8 +1346,8 @@ export default function Home() {
         .filter(
           (event) =>
             event.id !== focalEvent.id &&
-            isFutureEvent(event, today) &&
-            isSameNightEvent(event, today)
+            isFutureEvent(event, currentTime) &&
+            isSameNightEvent(event, currentTime)
         )
         .sort(
           (firstEvent, secondEvent) =>
@@ -1267,7 +1361,7 @@ export default function Home() {
   const upcomingEvents = sortEventsByStartTime(
     events.filter(
       (event) =>
-        isFutureEvent(event, today) &&
+        isFutureEvent(event, currentTime) &&
         event.id !== focalEvent?.id &&
         !companionEventIds.has(event.id) &&
         !ongoingEventIds.has(event.id)
@@ -1275,11 +1369,29 @@ export default function Home() {
   );
   const visibleUpcomingEvents = upcomingEvents.slice(0, homepageUpcomingLimit);
   const sortedPromoCards = sortPromoCardsByDate(promoCards, today);
+  const featuredPromoCards = sortedPromoCards.filter((promo) =>
+    isPromoFeaturedToday(promo, today)
+  );
+  const featuredPromoTitles = new Set(
+    featuredPromoCards.map((promo) => promo.title)
+  );
+  const remainingPromoCards = sortedPromoCards.filter(
+    (promo) => !featuredPromoTitles.has(promo.title)
+  );
+  const featuredPromoMention = formatFeaturedPromoMention(featuredPromoCards);
+  const todayDailySpecial = getDailySpecialForDate(today);
   const sortedDailySpecials = sortDailySpecialsForWeek(dailySpecials, today);
+  const calendarQueryEvents = toCalendarEventsByDate(calendarQuery.data);
   const calendarEvents = mergeCalendarEvents(
     mergeCalendarEvents(
       mergeCalendarEvents(
-        toCalendarEventsByDate(calendarQuery.data),
+        mergeCalendarEvents(
+          calendarQueryEvents,
+          getFridayKaraokeCalendarEventsForMonth(
+            calendarMonth,
+            calendarQueryEvents
+          )
+        ),
         getAstrosSpecialCalendarEvents(calendarQuery.data)
       ),
       getDailySpecialCalendarEventsForMonth(dailySpecials, calendarMonth)
@@ -1296,7 +1408,7 @@ export default function Home() {
   const heroDescription = getHeroDescription({
     focalEvent,
     fridayKaraokeEvent,
-    currentTime: today,
+    currentTime,
   });
   function retryQueries() {
     void upcomingQuery.refetch();
@@ -1307,13 +1419,19 @@ export default function Home() {
     <>
       <OfflineBanner />
       <main id="home" className="flex-1 pb-28">
-        <SbSection className="py-5 sm:py-7">
+        <SbSection className="sb-hero py-6 sm:py-9">
           <SbContainer className="space-y-4">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-3 rounded-md border border-border/70 bg-surface-1 px-3 py-2">
-                  <SbLogo className="h-8 w-auto sm:h-9" />
-                  <SbBadge tone="blue">Tonight</SbBadge>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <SbLogo className="h-9 w-auto sm:h-10" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-primary">
+                    <span
+                      aria-hidden
+                      className="sb-live-dot size-1.5 rounded-full bg-primary"
+                    />
+                    {todayLabel}
+                  </span>
                 </div>
                 <h1 className="text-3xl font-semibold tracking-normal text-foreground sm:text-5xl">
                   Tonight at Skoltz
@@ -1321,10 +1439,55 @@ export default function Home() {
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                   {heroDescription}
                 </p>
+                {featuredPromoMention ? (
+                  <p className="max-w-2xl rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold leading-6 text-foreground">
+                    {featuredPromoMention}
+                  </p>
+                ) : null}
+                {todayDailySpecial ? (
+                  <div className="max-w-2xl space-y-1.5 rounded-md border border-warning/35 bg-warning/10 px-3 py-2.5 shadow-[0_0_14px_rgb(255_176_32_/_0.08)]">
+                    <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-warning">
+                      {todayDailySpecial.dayName} specials
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {todayDailySpecial.items.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-sm bg-background/70 px-2 py-1 text-xs font-semibold text-foreground"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
 
             <PwaInstallBanner />
+
+            {featuredPromoCards.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {featuredPromoCards.map((promo) => (
+                  <button
+                    key={promo.title}
+                    className="text-left"
+                    type="button"
+                    aria-label={`Open ${promo.title} on the calendar`}
+                    onClick={() => openPromoOnCalendar(promo)}
+                  >
+                    <SbPromoCard
+                      image={promo.image}
+                      alt={promo.alt}
+                      title={promo.title}
+                      subtitle={promo.subtitle}
+                      ctaText={promo.ctaText}
+                      className="h-full border-primary/50 text-left shadow-[var(--sb-glow-blue)]"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             {isLoading ? (
               <SbEventCardSkeleton className="min-h-72 border-primary/40 bg-primary/10 shadow-[var(--sb-glow-blue)]" />
@@ -1357,7 +1520,7 @@ export default function Home() {
 
             {!isLoading && !isError && focalEvent ? (
               <div className="space-y-3">
-                <FocalEventCard event={focalEvent} currentTime={today} />
+                <FocalEventCard event={focalEvent} currentTime={currentTime} />
 
                 {companionEvents.length > 0 ? (
                   <SbCard className="space-y-2.5 border-primary/20 bg-surface-2 p-3">
@@ -1432,7 +1595,7 @@ export default function Home() {
                   <CompactEventCard
                     key={event.id}
                     event={event}
-                    currentTime={today}
+                    currentTime={currentTime}
                     showAstrosSpecials
                   />
                 ))}
@@ -1467,7 +1630,7 @@ export default function Home() {
                   <CompactEventCard
                     key={event.id}
                     event={event}
-                    currentTime={today}
+                    currentTime={currentTime}
                   />
                 ))}
               </div>
@@ -1487,56 +1650,70 @@ export default function Home() {
             ) : null}
 
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {sortedDailySpecials.map((special) => (
-                <button
-                  key={special.dayName}
-                  className="min-w-56 max-w-64 shrink-0 text-left sm:min-w-64"
-                  type="button"
-                  aria-label={`Open ${special.dayName} specials on the calendar`}
-                  onClick={() => openDailySpecialOnCalendar(special)}
-                >
-                  <SbCard className="h-full space-y-2 border-warning/35 bg-warning/10 p-3 transition hover:border-warning/60 hover:bg-warning/15">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-lg font-semibold">
-                        {special.dayName}
-                      </h3>
-                      <SbBadge tone="warning">Daily Specials</SbBadge>
-                    </div>
-                    <div className="grid gap-1">
-                      {special.items.map((item) => (
-                        <p
-                          key={item}
-                          className="rounded-sm bg-background/70 px-2 py-1 text-sm font-semibold text-foreground"
-                        >
-                          {item}
-                        </p>
-                      ))}
-                    </div>
-                  </SbCard>
-                </button>
-              ))}
+              {sortedDailySpecials.map((special) => {
+                const isTodaySpecial = special.day === today.getDay();
+
+                return (
+                  <button
+                    key={special.dayName}
+                    className="min-w-56 max-w-64 shrink-0 text-left sm:min-w-64"
+                    type="button"
+                    aria-label={`Open ${special.dayName} specials on the calendar`}
+                    onClick={() => openDailySpecialOnCalendar(special)}
+                  >
+                    <SbCard
+                      className={cn(
+                        "h-full space-y-2 border-warning/35 bg-warning/10 p-3 transition hover:border-warning/60 hover:bg-warning/15",
+                        isTodaySpecial &&
+                          "border-warning/60 bg-warning/15 shadow-[0_0_0_1px_rgb(255_176_32_/_0.18),0_0_18px_rgb(255_176_32_/_0.14)]"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold">
+                          {special.dayName}
+                        </h3>
+                        <SbBadge tone="warning">
+                          {isTodaySpecial ? "Tonight" : "Daily Specials"}
+                        </SbBadge>
+                      </div>
+                      <div className="grid gap-1">
+                        {special.items.map((item) => (
+                          <p
+                            key={item}
+                            className="rounded-sm border-l-2 border-warning/50 bg-background/70 px-2 py-1 text-sm font-semibold text-foreground"
+                          >
+                            {item}
+                          </p>
+                        ))}
+                      </div>
+                    </SbCard>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {sortedPromoCards.map((promo) => (
-                <button
-                  key={promo.title}
-                  className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
-                  type="button"
-                  aria-label={`Open ${promo.title} on the calendar`}
-                  onClick={() => openPromoOnCalendar(promo)}
-                >
-                  <SbPromoCard
-                    image={promo.image}
-                    alt={promo.alt}
-                    title={promo.title}
-                    subtitle={promo.subtitle}
-                    ctaText={promo.ctaText}
-                    className="h-full text-left"
-                  />
-                </button>
-              ))}
-            </div>
+            {remainingPromoCards.length > 0 ? (
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {remainingPromoCards.map((promo) => (
+                  <button
+                    key={promo.title}
+                    className="min-w-72 max-w-80 shrink-0 sm:min-w-80 lg:min-w-0 lg:flex-1"
+                    type="button"
+                    aria-label={`Open ${promo.title} on the calendar`}
+                    onClick={() => openPromoOnCalendar(promo)}
+                  >
+                    <SbPromoCard
+                      image={promo.image}
+                      alt={promo.alt}
+                      title={promo.title}
+                      subtitle={promo.subtitle}
+                      ctaText={promo.ctaText}
+                      className="h-full text-left"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </SbContainer>
         </SbSection>
 
